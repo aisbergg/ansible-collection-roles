@@ -1,0 +1,4 @@
+---
+__cron_service_name: cronie.service
+__cron_requirements:
+  - cronie

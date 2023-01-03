@@ -1,0 +1,260 @@
+---
+__postfix_requirements:
+  - postfix
+  - openssl
+  - python-cryptography  # required to extract PKCS12 files
+
+__postfix_conf_path: /etc/postfix
+
+__postfix_tls_certs_path: /etc/ssl/certs
+__postfix_tls_key_path: /etc/ssl/private
+
+__postfix_service_name: postfix
+
+
+
+# ------------------------------------------------------------------------------
+# Postfix Main Configuration Defaults
+#
+# Manpage: http://www.postfix.org/postconf.5.html
+# Sample: https://exampleconfig.com/view/postfix-centos8-etc-postfix-main-cf
+# ------------------------------------------------------------------------------
+
+__postfix_main_config_defaults:
+
+  #
+  # General
+  #
+
+  inet_interfaces: loopback-only
+  inet_protocols: all
+  mydestination:
+    - localhost.localdomain
+    - localhost
+  mynetworks:
+    - "127.0.0.0/8"
+    - "[::ffff:127.0.0.0]/104"
+    - "[::1]/128"
+  myorigin: $myhostname
+
+  alias_maps: hash:/etc/aliases
+  alias_database: hash:/etc/aliases
+
+  smtpd_recipient_restrictions:
+    - permit_mynetworks
+    - permit_sasl_authenticated
+    - reject_unauth_destination
+    - reject_invalid_hostname
+    - reject_non_fqdn_hostname
+    - reject_non_fqdn_sender
+    - reject_non_fqdn_recipient
+    - reject_unknown_sender_domain
+    - reject_unknown_recipient_domain
+    - reject_rbl_client sbl.spamhaus.org
+    - reject_rbl_client cbl.abuseat.org
+    - reject_rbl_client dul.dnsbl.sorbs.net
+    - permit
+  smtpd_sender_restrictions:
+    - reject_unknown_sender_domain
+
+  sendmail_path: /usr/sbin/sendmail.postfix
+  newaliases_path: /usr/bin/newaliases.postfix
+  mailq_path: /usr/bin/mailq.postfix
+
+  biff: false
+  append_dot_mydomain: false
+  compatibility_level: 3
+
+
+
+  #
+  # TLS Server
+  #
+
+  # https://ssl-config.mozilla.org/#server=postfix&version=1.17.7&config=intermediate&openssl=1.1.1k&guideline=5.6
+  tls_medium_cipherlist: ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+  tls_ssl_options: NO_COMPRESSION
+  # let client decide on which cipher to use
+  tls_preempt_cipherlist: false
+
+  # logging of TLS activity
+  smtpd_tls_loglevel: 0
+
+  # ciphers and protocols
+  smtpd_tls_mandatory_protocols: "!SSLv2, !SSLv3, !TLSv1, !TLSv1.1"
+  smtpd_tls_protocols: "!SSLv2, !SSLv3, !TLSv1, !TLSv1.1"
+  smtpd_tls_mandatory_ciphers: medium
+  smtpd_tls_eecdh_grade: ultra
+
+  # not actually 1024 bits, this applies to all DHE >= 1024 bits
+  # generate with openssl dhparam -out /etc/postfix/dh2048.pem 2048
+  smtpd_tls_dh1024_param_file: /etc/postfix/dh2048.pem
+
+
+
+  #
+  # TLS Client
+  #
+
+  # logging of TLS activity
+  smtp_tls_loglevel: 0
+
+  # ciphers and protocols
+  smtp_tls_security_level: may
+  smtp_tls_mandatory_protocols: "!SSLv2, !SSLv3, !TLSv1, !TLSv1.1"
+  smtp_tls_protocols: "!SSLv2, !SSLv3, !TLSv1, !TLSv1.1"
+  smtp_tls_mandatory_ciphers: medium
+
+
+
+# ------------------------------------------------------------------------------
+# Postfix Master Configuration Defaults
+#
+# Manpage: http://www.postfix.org/master.5.html
+# Sample: https://exampleconfig.com/view/postfix-centos8-etc-postfix-master-cf
+# ------------------------------------------------------------------------------
+
+__postfix_master_config_defaults:
+  - name: smtp
+    type: inet
+    private: false
+    chroot: false
+    command: smtpd
+
+  - name: pickup
+    type: unix
+    private: false
+    chroot: false
+    wakeup: 60
+    maxproc: 1
+    command: pickup
+
+  - name: cleanup
+    type: unix
+    private: false
+    chroot: false
+    maxproc: 0
+    command: cleanup
+
+  - name: qmgr
+    type: unix
+    private: false
+    chroot: false
+    wakeup: 300
+    maxproc: 1
+    command: qmgr
+
+  - name: tlsmgr
+    type: unix
+    chroot: false
+    wakeup: 1000?
+    maxproc: 1
+    command: tlsmgr
+
+  - name: rewrite
+    type: unix
+    chroot: false
+    command: trivial-rewrite
+
+  - name: bounce
+    type: unix
+    chroot: false
+    maxproc: 0
+    command: bounce
+
+  - name: defer
+    type: unix
+    chroot: false
+    maxproc: 0
+    command: bounce
+
+  - name: trace
+    type: unix
+    chroot: false
+    maxproc: 0
+    command: bounce
+
+  - name: verify
+    type: unix
+    chroot: false
+    maxproc: 1
+    command: verify
+
+  - name: flush
+    type: unix
+    private: false
+    chroot: false
+    wakeup: 1000?
+    maxproc: 0
+    command: flush
+
+  - name: proxymap
+    type: unix
+    chroot: false
+    command: proxymap
+
+  - name: proxywrite
+    type: unix
+    chroot: false
+    maxproc: 1
+    command: proxymap
+
+  - name: smtp
+    type: unix
+    chroot: false
+    command: smtp
+
+  - name: relay
+    type: unix
+    chroot: false
+    command: smtp
+
+  - name: showq
+    type: unix
+    private: false
+    chroot: false
+    command: showq
+
+  - name: error
+    type: unix
+    chroot: false
+    command: error
+
+  - name: retry
+    type: unix
+    chroot: false
+    command: error
+
+  - name: discard
+    type: unix
+    chroot: false
+    command: discard
+
+  - name: local
+    type: unix
+    unpriv: false
+    chroot: false
+    command: local
+
+  - name: virtual
+    type: unix
+    unpriv: false
+    chroot: false
+    command: virtual
+
+  - name: lmtp
+    type: unix
+    chroot: false
+    command: lmtp
+
+  - name: anvil
+    type: unix
+    chroot: false
+    maxproc: 1
+    command: anvil
+
+  - name: scache
+    type: unix
+    chroot: false
+    maxproc: 1
+    command: scache

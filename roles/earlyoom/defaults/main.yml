@@ -1,0 +1,8 @@
+---
+# service state
+earlyoom_service_enabled: true
+earlyoom_service_state: started
+earlyoom_service_restart_on_change: true
+
+# configuration
+earlyoom_config: {}

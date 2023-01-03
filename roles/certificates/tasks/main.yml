@@ -1,0 +1,55 @@
+---
+- name: include OS-specific variables
+  tags: [always]
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family | lower }}_{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+        - "{{ ansible_distribution | lower }}_{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+      skip: true
+
+- name: install dependencies
+  tags: [always]
+  ansible.builtin.package:
+    name: "{{ __certificates_packages }}"
+    state: present
+
+- name: include ca_cert tasks
+  ansible.builtin.include_tasks: ca_cert.yml
+  loop: "{{ certificates_ca_certs }}"
+  loop_control:
+    loop_var: ca_cert
+    label: "{{ ca_cert.dest }}"
+
+- name: include cert tasks
+  ansible.builtin.include_tasks: cert.yml
+  loop: "{{ certificates_certs }}"
+  loop_control:
+    loop_var: cert
+    label: "{{ cert.dest }}"
+
+- name: include key tasks
+  ansible.builtin.include_tasks: key.yml
+  loop: "{{ certificates_keys }}"
+  loop_control:
+    loop_var: key
+    label: "{{ key.dest }}"
+
+- name: include pkcs12 tasks
+  ansible.builtin.include_tasks: pkcs12.yml
+  loop: "{{ certificates_pkcs12 }}"
+  loop_control:
+    loop_var: pkcs12
+    label: "{{ pkcs12.dest }}"
+
+- name: include create tasks
+  ansible.builtin.include_tasks: create.yml
+  loop: "{{ certificates_create }}"
+  loop_control:
+    loop_var: create
+    label: "{{ create.dest }}"
+
+- name: flush handler
+  ansible.builtin.meta: flush_handlers

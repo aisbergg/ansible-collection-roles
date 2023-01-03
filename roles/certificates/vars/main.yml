@@ -1,0 +1,11 @@
+---
+__certificates_packages:
+  - ca-certificates
+  - openssl
+  - python3-cryptography  # required to extract PKCS12 files
+
+__certificates_cert_base_path: /etc/ssl/certs
+__certificates_key_base_path: /etc/ssl/private
+__certificates_ca_cert_base_path: /usr/local/share/ca-certificates
+
+__certificates_ca_cert_update_command: update-ca-certificates

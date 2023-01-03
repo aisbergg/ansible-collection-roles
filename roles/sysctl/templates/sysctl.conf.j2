@@ -1,0 +1,16 @@
+#jinja2: trim_blocks: "true", lstrip_blocks: "true"
+{{ ansible_managed | comment }}
+
+# --------------------------------------
+# BOOLEAN Values:
+# a) 0 (zero) - disabled / no / false
+# b) Non zero - enabled / yes / true
+# --------------------------------------
+
+{% for key, value in (parameters | dictsort) %}
+  {% if value is boolean %}
+{{ key }} = {{ value | ternary("1", "0") }}
+  {% else %}
+{{ key }} = {{ value }}
+  {% endif %}
+{% endfor %}

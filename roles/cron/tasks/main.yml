@@ -1,0 +1,23 @@
+---
+- name: include OS-specific variables
+  tags: [cron, always]
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family | lower }}_{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+        - "{{ ansible_os_family | lower }}_{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      skip: true
+
+- name: include installation tasks
+  tags: [cron, cron_install, install]
+  ansible.builtin.import_tasks: installation.yml
+
+- name: include job tasks
+  tags: [cron, cron_jobs, jobs]
+  ansible.builtin.import_tasks: jobs.yml
+
+- name: include service tasks
+  tags: [cron, cron_service, service]
+  ansible.builtin.import_tasks: service.yml

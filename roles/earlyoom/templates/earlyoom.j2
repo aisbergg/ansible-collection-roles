@@ -1,0 +1,18 @@
+{{ ansible_managed | comment }}
+
+# Default settings for earlyoom. This file is sourced by /bin/sh from
+# /etc/init.d/earlyoom or by systemd from earlyoom.service.
+
+# Options to pass to earlyoom
+EARLYOOM_ARGS="
+    {{- '-M ' ~ cfg.minimum_memory_size ~ ' ' if minimum_memory_size is defined else
+        '-m ' ~ cfg.minimum_memory_percent ~ ' ' }}
+    {{- '-S ' ~ cfg.minimum_swap_size ~ ' ' if minimum_swap_size is defined else
+        '-s ' ~ cfg.minimum_swap_percent ~ ' ' if cfg.minimum_swap_percent is defined else '' }}
+    {{- '-i ' if cfg.ignore_positive_oom_score_adj_values else '' }}
+    {{- '-n ' if cfg.notify_send_enabled else '' }}
+    {{- '-N ' ~ cfg.notify_command ~ ' ' if cfg.notify_command is defined }}
+    {{- '-r ' ~ cfg.memory_report_interval ~ ' ' }}
+    {{- '-p ' if cfg.lower_niceness else '' }}
+    {{- '--avoid \'' ~ cfg.avoid_regex ~ '\' ' if cfg.avoid_regex is defined else '' }}
+    {{- '--prefer \'' ~ cfg.prefer_regex ~ '\'' if cfg.prefer_regex is defined else '' }}"

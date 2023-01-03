@@ -1,0 +1,9 @@
+---
+- name: restart beats
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: restarted
+  when:
+    - "lookup('vars', item ~ '_service_restart_on_change') | bool"
+    - "lookup('vars', item ~ '_service_state') != 'stopped'"
+  loop: "{{ __beats_restart.results | selectattr('changed', 'equalto', true) | map(attribute='item') | list }}"

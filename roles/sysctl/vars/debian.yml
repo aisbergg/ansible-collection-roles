@@ -1,0 +1,5 @@
+---
+# defaults for debian distributions
+
+__sysctl_dependencies:
+  - procps

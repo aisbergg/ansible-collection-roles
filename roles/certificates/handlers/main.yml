@@ -1,0 +1,3 @@
+---
+- name: update ca certificates
+  ansible.builtin.command: "{{ __certificates_ca_cert_update_command }}"

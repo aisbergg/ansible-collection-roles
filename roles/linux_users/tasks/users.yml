@@ -1,0 +1,64 @@
+---
+- name: manage Linux users
+  ansible.builtin.user:
+    append:             "{{ user.append | default(omit) }}"
+    comment:            "{{ user.comment | default(omit) }}"
+    create_home:        "{{ user.create_home | default(omit) }}"
+    expires:            "{{ user.expires | default(omit) }}"
+    force:              "{{ user.force | default(omit) }}"
+    group:              "{{ user.group | default(user.name) }}"
+    groups:             "{{ user.groups | default(omit) }}"
+    home:               "{{ user.home | default('/root' if user.name == 'root' else '/home/' ~ user.name) }}"
+    local:              "{{ user.local | default(omit) }}"
+    move_home:          "{{ user.move_home | default(omit) }}"
+    name:               "{{ user.name }}"
+    non_unique:         "{{ user.non_unique | default(omit) }}"
+    password_lock:      "{{ user.password_lock | default(omit) }}"
+    password:           "{{
+        user.plain_password | pbkdf2_hash(rounds=linux_users_hash_rounds, scheme=linux_users_hash_scheme) if user.plain_password is defined else
+        user.password if user.password is defined else
+        omit
+      }}"
+    remove:             "{{ user.remove | default(omit) }}"
+    seuser:             "{{ user.seuser | default(omit) }}"
+    shell:              "{{ user.shell | default(omit) }}"
+    skeleton:           "{{ user.skeleton | default(omit) }}"
+    ssh_key_bits:       "{{ user.ssh_key_bits | default(omit) }}"
+    ssh_key_comment:    "{{ user.ssh_key_comment | default(omit) }}"
+    ssh_key_file:       "{{ user.ssh_key_file | default(omit) }}"
+    ssh_key_passphrase: "{{ user.ssh_key_passphrase | default(omit) }}"
+    ssh_key_type:       "{{ user.ssh_key_type | default(omit) }}"
+    state:              "{{ user.state | default('present') }}"
+    system:             "{{ user.system | default(omit) }}"
+    uid:                "{{ user.uid | default(omit) }}"
+    update_password:    "{{ user.update_password | default(omit) }}"
+  loop: "{{ linux_users }}"
+  loop_control:
+    loop_var: user
+    label: "{{ user.name }} to be {{ user.state | default('present') }}"
+
+- name: delete primary groups of absent users
+  ansible.builtin.group:
+    name: "{{ user.group | default(user.name) }}"
+    state: absent
+  loop: "{{ linux_users | selectattr2('state', '==', 'absent') | list }}"
+  loop_control:
+    loop_var: user
+    label: "{{ user.name }}"
+
+- name: manage authorized keys
+  authorized_key:
+    user:           "{{ user.name }}"
+    key:            "{{ user.authorized_key.key | default(user.authorized_key) }}"
+    comment:        "{{ user.authorized_key.comment | default(omit) }}"
+    state:          present
+    exclusive:      "{{ user.authorized_key.exclusive | default(omit) }}"
+    key_options:    "{{ user.authorized_key.key_options | default(omit) }}"
+    path:           "{{ user.authorized_key.path | default(omit) }}"
+    validate_certs: "{{ user.authorized_key.validate_certs | default(omit) }}"
+    manage_dir:     "{{ user.authorized_key.manage_dir | default(omit) }}"
+  when: user.authorized_key is defined
+  loop: "{{ linux_users | selectattr2('state', '==', 'present', default='present') | list }}"
+  loop_control:
+    loop_var: user
+    label: "{{ user.name }}"

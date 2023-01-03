@@ -1,0 +1,87 @@
+---
+#
+# Nginx Configuration
+#
+
+- name: create main configuration
+  ansible.builtin.template:
+    src: etc/nginx/nginx.conf.j2
+    dest: "{{ __nginx_conf_path }}/nginx.conf"
+    owner: root
+    group: root
+    mode: 0644
+    trim_blocks: true
+    lstrip_blocks: true
+  notify: reload nginx
+  vars:
+    cfg: "{{ nginx_config }}"
+    cfg_file: "{{ __nginx_conf_path }}/nginx.conf"
+
+- name: create vhosts configurations in {{ __nginx_vhosts_path }}
+  ansible.builtin.template:
+    src: "{{ vhost.template | default('etc/nginx/conf.d/vhost.conf.j2') }}"
+    dest: "{{ __nginx_vhosts_path }}/{{ vhost.filename }}"
+    owner: root
+    group: root
+    mode: 0644
+    trim_blocks: true
+    lstrip_blocks: true
+  register: managed_config_files
+  notify: reload nginx
+  vars:
+    cfg: "{{ vhost.cfg | default({}) }}"
+    cfg_file: "{{ __nginx_conf_path }}/nginx.conf"
+  loop: "{{ nginx_vhosts }}"
+  loop_control:
+    loop_var: vhost
+    label: "{{ vhost.filename }}"
+
+- name: other configurations in {{ __nginx_conf_path }}
+  ansible.builtin.template:
+    src: "{{ other_config.template }}"
+    dest: "{{ __nginx_conf_path }}/{{ other_config.filename }}"
+    owner: root
+    group: root
+    mode: 0644
+    trim_blocks: true
+    lstrip_blocks: true
+  notify: reload nginx
+  vars:
+    cfg: "{{ other_config.cfg | default({}) }}"
+    cfg_file: "{{ __nginx_conf_path }}/nginx.conf"
+  loop: "{{ nginx_other_configs }}"
+  loop_control:
+    loop_var: other_config
+    label: "{{ other_config.filename }}"
+
+
+
+#
+# Remove Unmanaged Configurations
+#
+
+- name: include unmanaged configs removal tasks
+  ansible.builtin.include_tasks: remove_unmanaged_configs.yml
+  when: nginx_remove_unmanaged_configs
+
+
+
+#
+# Validate Configurations
+#
+
+- name: validate configuration
+  ansible.builtin.command: nginx -t -c /etc/nginx/nginx.conf
+  register: nginx_configtest
+  failed_when: false
+  changed_when: false
+
+- name: fail on configuration error
+  ansible.builtin.fail:
+    msg: |
+      Failed to validate Nginx configuration:
+        {{ nginx_configtest.stderr | indent(2) }}
+  when: nginx_configtest is defined and nginx_configtest.rc != 0
+
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers

@@ -1,0 +1,8 @@
+#jinja2: trim_blocks: "true", lstrip_blocks: "true"
+{{ ansible_managed | comment }}
+
+{% for name, value in localization_locales_default | dictsort %}
+{%   if name | upper in __localization_locales_variables %}
+{{ name | upper }}={{ value }}
+{%   endif %}
+{% endfor %}

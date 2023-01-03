@@ -1,0 +1,12 @@
+{{ ansible_managed | comment }}
+
+[nginx-stable]
+name=Nginx Stable
+baseurl={{ nginx_redhat_repo_url }}
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/GPG-KEY-nginx
+enabled=1
+autorefresh=1
+type=rpm-md
+# required, otherwise DNF won't show all packages from this repository
+module_hotfixes=true

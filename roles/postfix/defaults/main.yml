@@ -1,0 +1,74 @@
+---
+# ------------------------------------------------------------------------------
+# Installation
+# ------------------------------------------------------------------------------
+
+# repository used for installation on RedHat systems
+postfix_redhat_enablerepo: ""
+
+# release channel used for installation on Debian systems
+postfix_debian_default_release: ""
+
+# extra packages to be installed, e.g.:
+#   postfix_extra_packages:
+#     - postfix-mysql
+#     - postfix-ldap
+postfix_extra_packages: []
+
+
+
+# ------------------------------------------------------------------------------
+# Service
+# ------------------------------------------------------------------------------
+
+# service enabled on boot
+postfix_service_enabled: true
+
+# service run state (started, stopped, restarted)
+postfix_service_state: started
+
+# restart service on configuration change
+postfix_service_reload_on_change: true
+
+
+
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
+
+# copy tls certificate, key and/or pkcs12
+postfix_copy_tls_certs: []
+postfix_copy_tls_keys: []
+postfix_copy_tls_pkcs12: []
+
+# create a dummy certificate, that can be used for testing or other purposes
+postfix_create_dummy_certificate: false
+
+# main configuration (/etc/postfix/main.cf)
+postfix_main_config: {}
+
+# master configuration (/etc/postfix/main.cf)
+postfix_master_config: "{{ __postfix_master_config_defaults }}"
+
+# lookup tables/databases (/etc/postfix/{name})
+# for example an `access` mapping defined as such:
+#
+#   postfix_config_maps:
+#     - name: access
+#       map:
+#         "1.2.3": REJECT
+#         "1.2.3.4": OK
+#
+#  can to be added like:
+#
+#  postfix_config:
+#    default_database_type: hash
+#    smtpd_recipient_restrictions: "hash:/etc/postfix/access"
+postfix_config_maps: []
+
+# aliases maps (/etc/aliases), e.g.:
+#   postfix_aliases:
+#     - src: root
+#       dest: root@example.org
+postfix_aliases: []
+

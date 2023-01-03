@@ -1,0 +1,6 @@
+---
+- name: restart btrfsmaintenance
+  ansible.builtin.systemd:
+    name: btrfsmaintenance-refresh
+    state: restarted
+  when: btrfsmaintenance_service_enabled

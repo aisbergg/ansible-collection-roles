@@ -1,0 +1,3 @@
+---
+__sysctl_dependencies:
+  - procps-ng

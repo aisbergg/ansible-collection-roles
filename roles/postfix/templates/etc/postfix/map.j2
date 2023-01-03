@@ -1,0 +1,17 @@
+{{ ansible_managed | comment }}
+
+# ------------------------------------------------------------------------------
+# Postfix Lookup Table
+#
+# Postfix tables (databases) files do have the format `key value` and need to be
+# processed with the `postmap` command in order to be used.
+#
+# Manpage:
+#   - http://www.postfix.org/DATABASE_README.html#intro
+#   - http://www.postfix.org/postmap.1.html
+# Sample: https://exampleconfig.com/view/postfix-centos8-etc-postfix-generic
+# ------------------------------------------------------------------------------
+
+{% for key, value in map|default({})|dictsort() if value is not none %}
+{{ key }}{{ ' ' ~ value if value else '' }}
+{% endfor %}

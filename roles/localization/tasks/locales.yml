@@ -1,0 +1,46 @@
+---
+# in RedHat 8 distributions the locales come pre-compiled with
+# 'glibc-langpack-<locale_code>' packages
+- when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version is version('7', '<=')
+  block:
+    - name: ensure specified locales are present on RedHat 7 distributions
+      ansible.builtin.command: >-
+        localedef
+        -i {{ item | langcode | quote }}
+        -f {{ item | encoding | quote }}
+        {{ item | encoding2lower | quote }}
+      changed_when: false
+      loop: "{{ localization_locales_present }}"
+
+    - name: ensure specified locales are absent on RedHat 7 distributions
+      ansible.builtin.command: >-
+        localedef
+        --delete-from-archive {{ item | langcode | quote }}
+        -f {{ item | encoding | quote }}
+        {{ item | encoding2lower | quote }}
+      changed_when: false
+      loop: "{{ localization_locales_absent }}"
+
+- when: ansible_os_family != 'RedHat'
+  block:
+    - name: ensure specified locales are present
+      community.general.locale_gen:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ localization_locales_present }}"
+
+    - name: ensure specified locales are absent
+      community.general.locale_gen:
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ localization_locales_absent }}"
+
+- name: configure locales
+  ansible.builtin.template:
+    src: locale.conf.j2
+    dest: "{{ __localization_locales_conf }}"
+    owner: root
+    group: root
+    mode: 0644

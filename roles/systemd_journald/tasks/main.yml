@@ -1,0 +1,28 @@
+---
+- name: configure journald
+  tags: [journald]
+  ansible.builtin.template:
+    src: journald.conf.j2
+    dest: /etc/systemd/journald.conf
+    mode: 0644
+    owner: root
+    group: root
+    trim_blocks: true
+    lstrip_blocks: true
+  notify: restart systemd-journald
+
+- name: wipe persistent storage directory
+  tags: [journald]
+  ansible.builtin.file:
+    path: /var/log/journal
+    state: absent
+  when: systemd_journald_wipe_persistent_storage
+
+- name: ensure persistent storage directory exists
+  tags: [journald]
+  ansible.builtin.file:
+    path: /var/log/journal
+    state: directory
+    mode: "2755"
+    owner: root
+    group: systemd-journal

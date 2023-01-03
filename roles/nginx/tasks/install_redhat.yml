@@ -1,0 +1,47 @@
+---
+- when: nginx_redhat_repo_url | length > 0
+  block:
+    - name: add Nginx RPM repository (RedHat)
+      ansible.builtin.template:
+        src: etc/yum.repos.d/nginx.repo.j2
+        dest: /etc/yum.repos.d/nginx.repo
+        owner: root
+        group: root
+        mode: 0644
+        trim_blocks: true
+        lstrip_blocks: true
+
+    - name: copy Nginx repo GPG key (RedHat)
+      ansible.builtin.copy:
+        src: centos/GPG-KEY-nginx
+        dest: /etc/pki/rpm-gpg/GPG-KEY-nginx
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: import Nginx repo GPG key (RedHat)
+      ansible.builtin.rpm_key:
+        key: /etc/pki/rpm-gpg/GPG-KEY-nginx
+        fingerprint: 573B FD6B 3D8F BC64 1079 A6AB ABF5 BD82 7BD9 BF62
+
+- name: activate specific stream (RedHat)
+  ansible.builtin.copy:
+    content: |-
+      [nginx]
+      name=nginx
+      stream={{ nginx_redhat_stream }}
+      profiles=
+      state=enabled
+    dest: /etc/dnf/modules.d/nginx.module
+    owner: root
+    group: root
+    mode: 0644
+  register: _module_enabled
+  when: ansible_distribution_major_version is version('8', '>=')
+
+- name: install packages (RedHat)
+  ansible.builtin.dnf:
+    name: "{{ __nginx_packages + nginx_extra_packages }}"
+    state: present
+    enablerepo: "{{ nginx_redhat_enablerepo if nginx_redhat_enablerepo else omit }}"
+    update_cache: "{{ _module_enabled.changed }}"

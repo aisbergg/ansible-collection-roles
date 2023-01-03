@@ -1,0 +1,15 @@
+---
+- name: install Docker (Arch Linux)
+  community.general.pacman:
+    name:
+      - docker
+      - docker-compose
+    state: present
+
+- name: install Docker Python library (Arch Linux)
+  community.general.pacman:
+    name: python-docker
+    state: present
+  when:
+    - docker_install_python_docker | bool
+    - not ansible_check_mode

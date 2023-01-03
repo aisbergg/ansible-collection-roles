@@ -1,0 +1,17 @@
+---
+- name: configure keymap
+  ansible.builtin.lineinfile:
+    path: /etc/vconsole.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state | default(omit) }}"
+    create: true
+    owner: root
+    group: root
+    mode: 0644
+  loop:
+    - regexp: '^KEYMAP='
+      line: "KEYMAP={{ localization_keymap }}"
+    - regexp: '^KEYMAP_TOGGLE='
+      line: "KEYMAP_TOGGLE={{ localization_keymap_toggle }}"
+      state: "{{ localization_keymap_toggle is none | ternary('absent', 'present') }}"

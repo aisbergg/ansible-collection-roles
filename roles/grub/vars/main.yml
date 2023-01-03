@@ -1,0 +1,18 @@
+---
+# os-independet defaults
+
+# packages to be installed
+__grub_dependencies:
+  - grub2
+
+# grub mkconfig binary
+__grub_mkconfig_command: /usr/bin/grub-mkconfig
+
+# grub user config file
+__grub_config_file: /etc/default/grub
+
+# grub boot config file
+__grub_generated_config_file: /boot/grub/grub.cfg
+
+# defaults for grub config
+__grub_config_defaults: {}

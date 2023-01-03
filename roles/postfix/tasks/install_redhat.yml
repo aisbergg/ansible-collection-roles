@@ -1,0 +1,6 @@
+---
+- name: install packages (RedHat)
+  ansible.builtin.dnf:
+    name: "{{ __postfix_requirements + postfix_extra_packages }}"
+    state: present
+    enablerepo: "{{ postfix_redhat_enablerepo if postfix_redhat_enablerepo else omit }}"

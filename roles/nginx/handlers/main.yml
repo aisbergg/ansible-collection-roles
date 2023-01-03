@@ -1,0 +1,8 @@
+---
+- name: reload nginx
+  ansible.builtin.service:
+    name: "{{ __nginx_service_name }}"
+    state: reloaded
+  when:
+    - nginx_service_reload_on_change | bool
+    - nginx_service_state != 'stopped'

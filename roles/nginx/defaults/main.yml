@@ -1,0 +1,62 @@
+---
+# ------------------------------------------------------------------------------
+# Installation
+# ------------------------------------------------------------------------------
+
+# repository used for installation on RedHat systems
+nginx_redhat_enablerepo: ""
+nginx_redhat_repo_url: ""
+
+# DNF stream to activate on RedHat systems
+nginx_redhat_stream: ""
+
+# release channel used for installation on Debian systems
+nginx_debian_default_release: ""
+
+# extra packages to be installed
+nginx_extra_packages: []
+
+# specific version to install (if available in repository)
+nginx_version: ""
+
+
+
+# ------------------------------------------------------------------------------
+# Service
+# ------------------------------------------------------------------------------
+
+# service enabled on boot
+nginx_service_enabled: true
+
+# service run state (started, stopped, restarted)
+nginx_service_state: started
+
+# restart service on configuration change
+nginx_service_reload_on_change: true
+
+
+
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
+
+# copy tls certificate, key and/or pkcs12
+nginx_copy_tls_certs: []
+nginx_copy_tls_keys: []
+nginx_copy_tls_pkcs12: []
+
+# create a dummy certificate, that can be used for testing or other purposes
+nginx_create_dummy_certificate: false
+
+# remove configurations from conf.d, which are not managed using Ansible
+nginx_remove_unmanaged_configs: false
+nginx_unmanaged_configs_allowlist: []
+
+# main configuration
+nginx_config: {}
+
+# vhost configurations in /etc/nginx/conf.d
+nginx_vhosts: []
+
+# other configurations in in /etc/nginx
+nginx_other_configs: []

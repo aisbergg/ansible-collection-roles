@@ -1,0 +1,35 @@
+---
+- name: generate configuration
+  vars:
+    cfg: "{{ __btrfsmaintenance_config_defaults | combine(btrfsmaintenance_config) }}"
+  ansible.builtin.template:
+    src: btrfsmaintenance.j2
+    dest: "{{ __btrfsmaintenance_config_file }}"
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart btrfsmaintenance
+
+- name: enable scripts
+  ansible.builtin.systemd:
+    name: btrfsmaintenance-refresh
+    enabled: true
+    state: stopped
+  when: btrfsmaintenance_service_enabled
+
+- name: disable scripts
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+    loop:
+      - btrfsmaintenance-refresh.service
+      - btrfs-balance.service
+      - btrfs-defrag.service
+      - btrfs-scrub.service
+      - btrfs-trim.service
+      - btrfs-balance.timer
+      - btrfs-defrag.timer
+      - btrfs-scrub.timer
+      - btrfs-trim.timer
+  when: not btrfsmaintenance_service_enabled

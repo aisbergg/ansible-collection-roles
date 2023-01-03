@@ -1,0 +1,22 @@
+---
+# certificates_handler: ""
+# certificates_keys_handler: ""
+# certificates_certs_handler: ""
+# certificates_ca_certs_handler: ""
+# certificates_pkcs12_handler: ""
+# certificates_create_handler: ""
+
+# keys to be copied or deleted
+certificates_keys: []
+
+# certificates to be copied or deleted
+certificates_certs: []
+
+# CA certificates to be copied or deleted
+certificates_ca_certs: []
+
+# certificates in pkcs12 format to be copied or deleted
+certificates_pkcs12: []
+
+# certificates-keys to be created
+certificates_create: []

@@ -1,0 +1,13 @@
+---
+- name: disable automatic configuration using debconf (Debian)
+  ansible.builtin.debconf:
+    name: postfix
+    question: postfix/main_mailer_type
+    vtype: string
+    value: "No configuration"
+
+- name: install packages (Debian)
+  ansible.builtin.apt:
+    name: "{{ __postfix_requirements + postfix_extra_packages }}"
+    state: present
+    default_release: "{{ postfix_debian_default_release | default(omit) }}"

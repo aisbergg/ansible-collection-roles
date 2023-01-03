@@ -1,0 +1,44 @@
+---
+- name: assert correctness of configuration
+  tags: [always]
+  ansible.builtin.assert:
+    that:
+      - pkcs12.dest is defined and pkcs12.dest is string
+      - (pkcs12.file is defined and pkcs12.file is string)
+        or (pkcs12.url is defined and pkcs12.url is string)
+        or (pkcs12.content is defined and pkcs12.content is string)
+
+- name: make destination path absolute ({{ pkcs12.dest }})
+  tags: [always]
+  ansible.builtin.set_fact:
+    _dest: "{{ (pkcs12.dest is abs) | ternary(pkcs12.dest, __certificates_pkcs12_base_path ~ '/' ~ pkcs12.dest) }}"
+    handler: "{{ ['update ca certificates'] + (pkcs12.handler | default(certificates_certs_handler | default(certificates_handler | default([])))) }}"
+
+- name: remove certificate file ({{ pkcs12.dest }})
+  tags: [certs, certs_remove, remove]
+  when: pkcs12.state | default('present') == 'absent'
+  ansible.builtin.file:
+    path: "{{ dest }}"
+    state: absent
+  notify: "{{ handler }}"
+
+- when: pkcs12.state | default('present') == 'present'
+  block:
+    - name: include certificate copy tasks ({{ pkcs12.dest }})
+      tags: [certs, certs_copy, copy]
+      ansible.builtin.include_tasks: copy.yml
+      vars:
+        element: "{{ pkcs12 }}"
+        dest: "{{ _dest ~ '.p12' }}"
+
+    # unfortunately this module doesn't tell us, if the resulting PEM changes
+    - name: extract certificates from PKCS file ({{ pkcs12.dest }})
+      tags: [certs, certs_copy, copy]
+      community.crypto.openssl_pkcs12:
+        action: parse
+        src: "{{ _dest }}.p12"
+        passphrase: "{{ pkcs12.passphrase | default(omit) }}"
+        path: "{{ _dest }}"
+        state: present
+      when: not ansible_check_mode
+

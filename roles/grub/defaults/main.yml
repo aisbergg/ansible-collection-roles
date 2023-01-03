@@ -1,0 +1,12 @@
+---
+# extra GRUB dependencies to install (e.g. 'grub-btrfs')
+grub_extra_dependencies: []
+
+# GRUB dependencies to be removed
+grub_remove_dependencies: "{{ ['os-prober'] if not ansible_os_family == 'RedHat' else [] }}"
+
+# the GRUB configuration variables
+grub_config: {}
+
+# force GRUB to update its configuration
+grub_force_update: false

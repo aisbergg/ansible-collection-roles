@@ -1,0 +1,4 @@
+---
+# required dependencies
+__snapper_dependencies:
+  - "snapper"

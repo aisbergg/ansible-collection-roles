@@ -1,0 +1,10 @@
+---
+__postfix_tls_certs_path: /etc/pki/tls/certs
+__postfix_tls_key_path: /etc/pki/tls/private
+
+__postfix_requirements:
+  - postfix
+  - openssl
+  - python3-cryptography  # required to extract PKCS12 files
+
+__postfix_daemon_directory: /usr/libexec/postfix

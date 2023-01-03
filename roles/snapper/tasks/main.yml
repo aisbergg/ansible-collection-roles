@@ -1,0 +1,24 @@
+---
+- name: include installation tasks
+  tags: [snapper, snapper_install]
+  ansible.builtin.import_tasks: install.yml
+
+- name: include configuration tasks
+  tags: [snapper, snapper_config]
+  ansible.builtin.import_tasks: configure.yml
+
+- name: manage Snapper timers
+  tags: [snapper, snapper_service]
+  ansible.builtin.systemd:
+    name: "{{ timer.name }}"
+    enabled: "{{ timer.enabled }}"
+  loop:
+    - name: snapper-timeline.timer
+      enabled: "{{ snapper_timer_timeline_enabled }}"
+    - name: snapper-cleanup.timer
+      enabled: "{{ snapper_timer_cleanup_enabled }}"
+    - name: snapper-boot.timer
+      enabled: "{{ snapper_timer_boot_enabled }}"
+  loop_control:
+    label: "{{ timer.name }}"
+    loop_var: timer

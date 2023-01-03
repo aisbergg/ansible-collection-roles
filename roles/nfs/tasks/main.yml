@@ -1,0 +1,24 @@
+---
+- name: include OS-specific variables
+  tags: [nfs, always]
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution | lower }}_{{ ansible_distribution_major_version }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}_{{ ansible_distribution_major_version }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+
+- name: include installation tasks
+  tags: [nfs, nfs_install, install]
+  ansible.builtin.import_tasks: install.yml
+
+- name: include configuration tasks
+  tags: [nfs, nfs_config, config]
+  ansible.builtin.import_tasks: configure.yml
+
+- name: include service tasks
+  tags: [nfs, nfs_service, service]
+  ansible.builtin.import_tasks: service.yml
+
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers

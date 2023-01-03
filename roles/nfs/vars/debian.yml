@@ -1,0 +1,6 @@
+---
+__nfs_server_requirements:
+  - nfs-kernel-server
+
+__nfs_client_requirements:
+  - nfs-common

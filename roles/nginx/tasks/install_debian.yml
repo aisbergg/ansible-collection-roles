@@ -1,0 +1,6 @@
+---
+- name: install packages (Debian)
+  ansible.builtin.apt:
+    name: "{{ __nginx_packages + nginx_extra_packages }}"
+    state: present
+    default_release: "{{ nginx_debian_default_release | default(omit) }}"

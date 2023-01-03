@@ -1,0 +1,156 @@
+{{ ansible_managed | comment }}
+{% set headers = cfg.headers | default('
+# Security Headers
+
+# nosniff header
+#   see: https://www.owasp.org/index.php/List_of_useful_HTTP_headers
+- X-Content-Type-Options "nosniff"
+
+# enable anti-cross-site scripting filter built into Internet Explorer,
+# Chrome and Safari
+#   see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+- X-XSS-Protection "1; mode=block"
+
+# disallow the site to be rendered in a <frame>, <iframe>, <embed> or <object>
+#   see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+- X-Frame-Options "DENY"
+
+# HSTS: enforce the use of HTTPS
+#   see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
+- Strict-Transport-Security "max-age=31536000; includeSubDomains"' | from_yaml) %}
+{% if cfg.upstreams is defined %}
+
+{% for upstream in cfg.upstreams %}
+upstream {{ upstream.name }} {
+    {% if upstream.directives is string %}
+    {{ upstream.directives | indent(4) }}
+    {% else %}
+    {%   for directive in upstream.directives %}
+    {{ directive | indent(4) }};
+    {%   endfor %}
+    {% endif %}
+}
+{% endfor %}
+
+{% endif %}
+{% if cfg.catch_all_unknown | default(false) | bool %}
+# close connection for connections without "Host" header
+server {
+    {% for listen in cfg.listen | default(['80', '[::]:80', '443 ssl', '[::]:443 ssl']) %}
+    listen {{ listen }} default_server;
+    {% endfor %}
+
+    ssl_certificate     {{ __nginx_tls_certs_path }}/dummy.crt;
+    ssl_certificate_key {{ __nginx_tls_key_path }}/dummy.key;
+    {% if cfg.ssl_dhparam is defined %}
+    ssl_dhparam {{ cfg.ssl_dhparam }};
+    {% endif %}
+
+    # close the connection by issuing this custom code
+    # see https://nginx.org/en/docs/http/request_processing.html
+    return      444;
+}
+
+{% endif %}
+server {
+    {% for listen in cfg.listen | default(['80', '[::]:80', '443 ssl', '[::]:443 ssl']) %}
+    listen {{ listen }};
+    {% endfor %}
+    {% if cfg.server_name is defined and cfg.server_name | length > 0 %}
+
+    server_name {{ ([cfg.server_name] if cfg.server_name is string else cfg.server_name) | join(' ') }};
+    {% endif %}
+
+    {% if cfg.root is defined and cfg.root | length > 0 %}
+    root  {{ cfg.root }};
+    {% endif %}
+    {% if cfg.index is defined and cfg.index | length > 0 %}
+    index {{ cfg.index }};
+    {% endif %}
+    {% if cfg.rewrite_https | default(false) %}
+
+    # rewrite scheme to https
+    if ($scheme != "https") {
+        return 301 https://$host$request_uri;
+    }
+    {% endif %}
+    {% if cfg.ssl_certificate is defined %}
+
+    # TLS key and certificate
+    ssl_certificate     {{ cfg.ssl_certificate }};
+    ssl_certificate_key {{ cfg.ssl_certificate_key }};
+    {% endif %}
+    {% if cfg.ssl_dhparam is defined %}
+
+    # Diffie-Hellman parameter
+    ssl_dhparam {{ cfg.ssl_dhparam }};
+    {% endif %}
+    {% if headers | length > 0 %}
+
+    {%   for header in headers %}
+    add_header {{ header }};
+    {%   endfor %}
+    {% endif %}
+
+    # default values for proxying requests
+    proxy_intercept_errors  {{ cfg.proxy_intercept_errors | default('off') }};
+    proxy_buffering         {{ cfg.proxy_buffering | default('off') }};
+    proxy_buffer_size       {{ cfg.proxy_buffer_size | default('16k') }};
+    proxy_buffers           {{ cfg.proxy_buffers | default('16 4k') }};
+    proxy_set_header        {{ cfg.proxy_set_header | default('Host $http_host') }};
+    proxy_set_header        {{ cfg.proxy_set_header | default('X-Real-IP $proxy_add_x_forwarded_for') }};
+    proxy_set_header        {{ cfg.proxy_set_header | default('X-Forwarded-For $proxy_add_x_forwarded_for') }};
+    proxy_set_header        {{ cfg.proxy_set_header | default('X-Forwarded-Proto $real_scheme') }};
+    # strip 'Proxy' header (see httpoxy vulnerability)
+    proxy_set_header        {{ cfg.proxy_set_header | default('Proxy ""') }};
+    proxy_http_version      {{ cfg.proxy_http_version | default('1.1') }}; # with keepalive connections
+    proxy_cookie_path       {{ cfg.proxy_cookie_path | default('/ "/; Secure"') }};
+    {% if cfg.extra_top is defined %}
+
+    {%   if cfg.extra_top is string %}
+    {{ cfg.extra_top | indent(4) }}
+    {%   else %}
+    {%     for extra_top in cfg.extra_top %}
+    {{ extra_top | indent(4) }}
+    {%     endfor %}
+    {%   endif %}
+    {% endif %}
+
+    location = /robots.txt  { log_not_found off; }
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location ~ /\.          { access_log off; log_not_found off; deny all; }
+
+    {% for location in cfg.locations | default() %}
+    location {{ location.match }} {
+        {% if location.directives is string %}
+        {{ location.directives | indent(8) }}
+        {% else %}
+        {%   for directive in location.directives %}
+        {{ directive | indent(8) }};
+        {%   endfor %}
+        {% endif %}
+    }
+
+    {% endfor %}
+    {% if cfg.extra_bottom is defined %}
+    {%   if cfg.extra_bottom is string %}
+    {{ cfg.extra_bottom | indent(4) }}
+    {%   else %}
+    {%     for extra_bottom in cfg.extra_bottom %}
+    {{ extra_bottom | indent(4) }}
+    {%     endfor %}
+    {%   endif %}
+    {% endif %}
+    {% if cfg.add_client_caching | default(false) %}
+
+    # client caching
+    location ~* \.(?:css|js|jpg|jpeg|gif|png|ico|svg)$ {
+        expires     1M;
+        add_header  Cache-Control "public, must-revalidate, proxy-revalidate";
+        {% for header in headers %}
+        add_header  {{ header }};
+        {% endfor %}
+        access_log  off;
+    }
+    {% endif %}
+}

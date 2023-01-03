@@ -1,0 +1,5 @@
+---
+- name: install Cron requirements
+  ansible.builtin.package:
+    name: "{{ __cron_requirements }}"
+    state: present

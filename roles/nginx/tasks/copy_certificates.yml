@@ -1,0 +1,63 @@
+---
+#
+# Copy Certificates
+#
+
+- name: copy TLS certificates
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ abs_dest }}"
+    owner: root
+    group: root
+    mode: 0400
+  vars:
+    dest: "{{ item.dest | default(item.src | basename) }}"
+    abs_dest: "{{ (dest is abs) | ternary(dest, __nginx_tls_certs_path ~ '/' ~ dest) }}"
+  loop: "{{ nginx_copy_tls_certs }}"
+
+- name: copy TLS keys
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ abs_dest }}"
+    owner: root
+    group: root
+    mode: 0400
+  vars:
+    dest: "{{ item.dest | default(item.src | basename) }}"
+    abs_dest: "{{ (dest is abs) | ternary(dest, __nginx_tls_key_path ~ '/' ~ dest) }}"
+  loop: "{{ nginx_copy_tls_keys }}"
+
+- block:
+    # we need to keep the pkcs file, because the openssl_pkcs12 tasks won't tell
+    # us, if a certificate changes and therefore cannot be used to notify a
+    # nginx restart
+    - name: copy PKCS files
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ abs_dest_without_ext }}.pkcs12"
+        owner: root
+        group: root
+        mode: 0400
+      notify: reload nginx
+      vars:
+        dest: "{{ item.dest | default(item.src | basename) }}"
+        abs_dest_without_ext: "{{ ((dest is abs) | ternary(dest, __nginx_tls_key_path ~ '/' ~ dest) | splitext)[0] }}"
+      loop: "{{ nginx_copy_tls_pkcs12 }}"
+      loop_control:
+        label: "{{ item.src }}"
+
+    # unfortunately this module doesn't tell us, if the resulting PEM changes
+    - name: extract certificates from PKCS file
+      community.crypto.openssl_pkcs12:
+        action: parse
+        src: "{{ abs_dest_without_ext }}.pkcs12"
+        passphrase: "{{ item.passphrase | default(omit) }}"
+        path: "{{ abs_dest_without_ext }}.pem"
+        state: present
+      when: not ansible_check_mode
+      vars:
+        dest: "{{ item.dest | default(item.src | basename) }}"
+        abs_dest_without_ext: "{{ ((dest is abs) | ternary(dest, __nginx_tls_key_path ~ '/' ~ dest) | splitext)[0] }}"
+      loop: "{{ nginx_copy_tls_pkcs12 }}"
+      loop_control:
+        label: "{{ item.src }}"

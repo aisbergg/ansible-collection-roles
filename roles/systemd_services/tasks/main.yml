@@ -1,0 +1,16 @@
+---
+- name: manage systemd services
+  ansible.builtin.systemd:
+    daemon_reexec: "{{ service.daemon_reexec | default(omit) }}"
+    daemon_reload: "{{ service.daemon_reload | default(omit) }}"
+    enabled: "{{ service.enabled | default(omit) }}"
+    force: "{{ service.force | default(omit) }}"
+    masked: "{{ service.masked | default(omit) }}"
+    name: "{{ service.name | mandatory }}"
+    no_block: "{{ service.no_block | default(omit) }}"
+    scope: "{{ service.scope | default(omit) }}"
+    state: "{{ service.state | default(omit) }}"
+  loop: "{{ systemd_services }}"
+  loop_control:
+    loop_var: service
+    label: "{{ service.name }}"

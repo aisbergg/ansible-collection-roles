@@ -1,0 +1,5 @@
+---
+- name: install DNSCrypt proxy
+  ansible.builtin.package:
+    name: "{{ __dnscrypt_proxy_requirements }}"
+    state: present

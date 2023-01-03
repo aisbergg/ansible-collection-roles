@@ -1,0 +1,40 @@
+---
+# https://docs.docker.com/engine/install/centos/
+
+- when: docker_manage_repository | bool
+  block:
+    - name: copy Docker repo GPG keys (Red Hat)
+      ansible.builtin.copy:
+        src: etc/pki/rpm-gpg/GPG-KEY-docker
+        dest: /etc/pki/rpm-gpg/GPG-KEY-docker
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: import Docker repo GPG keys (Red Hat)
+      ansible.builtin.rpm_key:
+        key: /etc/pki/rpm-gpg/GPG-KEY-docker
+        fingerprint: 060A 61C5 1B55 8A7F 742B 77AA C52F EB6B 621E 9F35
+
+    - name: add Docker RPM repository (Red Hat)
+      ansible.builtin.template:
+        src: etc/yum.repos.d/docker.repo.j2
+        dest: /etc/yum.repos.d/docker.repo
+        owner: root
+        group: root
+        mode: 0644
+
+- name: install Docker (Red Hat)
+  ansible.builtin.yum:
+    name:
+      - docker-ce
+      - docker-compose-plugin
+    state: present
+
+- name: install Docker Python library (Red Hat)
+  ansible.builtin.yum:
+    name: python3-docker
+    state: present
+  when:
+    - docker_install_python_docker | bool
+    - not ansible_check_mode

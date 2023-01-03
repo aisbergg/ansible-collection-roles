@@ -1,0 +1,38 @@
+#jinja2: trim_blocks: "true", lstrip_blocks: "true"
+{{ ansible_managed | comment }}
+{% macro render_section(options) %}
+{%   for key, value in options|dictsort() %}
+{%     if value is list %}
+{{ key }} = {{ value | join(':') }}
+{%     elif value is boolean %}
+{{ key }} = {{ value | ternary('true', 'false') }}
+{%     else %}
+{{ key }} = {{ value }}
+{%     endif %}
+{%   endfor %}
+{% endmacro %}
+
+# /etc/nfsmount.conf - see nfsmount.conf(5) for details
+#
+# This is an NFS mount configuration file. This file can be broken
+# up into three different sections: Mount, Server and Global
+{% if cfg.mount_points | length > 0 %}
+{%   for mount_point, options in cfg.mount_points|dictsort %}
+[ MountPoint "{{ mount_point }}" ]
+{{ render_section(options) }}
+
+{%   endfor %}
+
+
+{% endif %}
+{% if cfg.servers | length > 0 %}
+{%   for server, options in cfg.servers|dictsort %}
+[ Server "{{ server }}" ]
+{{ render_section(options) }}
+
+{%   endfor %}
+
+
+{% endif %}
+[ NFSMount_Global_Options ]
+{{ render_section(cfg.global) }}

@@ -1,0 +1,6 @@
+---
+- name: manage Cron service
+  ansible.builtin.service:
+    name: "{{ __cron_service_name }}"
+    state: "{{ cron_service_state }}"
+    enabled: "{{ cron_service_enabled }}"

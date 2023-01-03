@@ -1,0 +1,21 @@
+---
+dependencies: []
+
+galaxy_info:
+  author: André Lehmann
+  namespace: aisbergg
+  role_name: mkinitcpio
+  description: Configure mkinitcpio and create initial ramdisk on Arch Linux systems.
+  company: none
+  issue_tracker_url: https://github.com/aisbergg/ansible-role-mkinitcpio/issues
+  license: MIT
+  min_ansible_version: "2.10"
+
+  platforms:
+    - name: ArchLinux
+      versions:
+        - all
+
+  galaxy_tags:
+    - mkinitcpio
+    - initramfs

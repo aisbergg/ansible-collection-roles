@@ -1,0 +1,20 @@
+---
+namespace: aisbergg
+name: roles
+version: 1.0.0
+readme: README.md
+authors:
+  - André Lehmann <aisberg@posteo.de>
+description: A collection of various Ansible Roles for Debian, RedHat and Arch Linux systems.
+license_file: LICENSE
+tags:
+  - aisbergg
+  - roles
+  - linux
+dependencies:
+  ansible.posix: "*"
+  community.crypto: "*"
+  community.general: "*"
+repository: https://github.com/aisbergg/ansible-collection-roles
+issues: https://github.com/aisbergg/ansible-collection-roles/issues
+build_ignore: []

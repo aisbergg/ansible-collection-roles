@@ -1,0 +1,248 @@
+{{ ansible_managed | comment }}
+{% macro as_bool(var) %}{{ var | bool | ternary('on', 'off') }}{% endmacro %}
+
+user                            {{ __nginx_user }};
+{% if ansible_os_family == 'Debian' %}
+include                         /etc/nginx/modules-enabled/*.conf;
+{%- endif %}
+worker_processes                {{ cfg.worker_processes | default('auto') }};
+# num of opened files per worker
+worker_rlimit_nofile            {{ cfg.worker_rlimit_nofile | default('20000') }};
+
+# Enables the use of JIT for regular expressions to speed-up their processing.
+pcre_jit on;
+
+error_log /var/log/nginx/error.log warn;
+
+
+###################################################
+# Events Block
+###################################################
+
+events {
+    worker_connections          {{ cfg.worker_connections | default(1024) }};
+    multi_accept                {{ as_bool(cfg.multi_accept | default(false)) }};
+}
+
+
+###################################################
+# HTTP Block
+###################################################
+
+http {
+
+    ###############################################
+    # Basic Settings
+    ###############################################
+
+    charset                     utf-8;
+    # hide information about nginx
+    server_tokens               off;
+    # ignore header fields with invalid names
+    ignore_invalid_headers      on;
+
+    include                     /etc/nginx/mime.types;
+    default_type                application/octet-stream;
+
+    # maximal allowed size of the client request body
+    client_max_body_size        {{ cfg.client_max_body_size | default('64M') }};
+
+    # maximum size of an entry in the MIME types hash tables
+    types_hash_max_size         {{ cfg.types_hash_max_size | default(2048) }};
+    # bucket size for the server names hash tables.
+    server_names_hash_bucket_size {{ cfg.server_names_hash_bucket_size | default(128) }};
+
+
+    ###############################################
+    # Performance Tweaks
+    ###############################################
+
+    # a comprehensive list of all parameters can be found at:
+    # http://nginx.org/en/docs/http/ngx_http_core_module.html
+
+    # for detailed information on the next three parameters read:
+    # https://thoughts.t37.net/nginx-optimization-understanding-sendfile-tcp-nodelay-and-tcp-nopush-c55cdd276765
+    # sendfile copies data between one file descriptor and another directly in
+    # kernel space
+    sendfile                    on;
+    # optimize the amount of data that is send in one TCP packet
+    tcp_nopush                  on;
+    # don't introduce artificial delay
+    tcp_nodelay                 on;
+
+    # timeout for keep-alive connections. Server will close connections after this time
+    keepalive_timeout           {{ cfg.keepalive_timeout | default('60s') }};
+    # maximum number of requests that can be served through one keep-alive connection
+    keepalive_requests          {{ cfg.keepalive_requests | default(100) }};
+    # allow the server to close the connection after a client stops responding
+    reset_timedout_connection   on;
+    # how long to wait for the client to send a request header
+    client_header_timeout       {{ cfg.client_header_timeout | default('12s') }};
+    # read timeout for the request body from client
+    client_body_timeout         {{ cfg.client_body_timeout | default('12s') }};
+    # timeout for transmitting a response to the client
+    send_timeout                {{ cfg.send_timeout | default('10s') }};
+
+    # buffer for reading a client request header
+    client_header_buffer_size   {{ cfg.client_header_buffer_size | default('1k') }};
+
+    large_client_header_buffers {{ cfg.large_client_header_buffers | default('4 8k') }};
+    # when a request body is larger than the buffer size, it is written to a temporary file
+    client_body_buffer_size     {{ cfg.client_body_buffer_size | default('128k') }};
+    # buffers used for reading a response from a disk.
+    output_buffers              {{ cfg.output_buffers | default('4 32k') }};
+    # transmission of client data will be postponed until nginx has at least size bytes of data to send
+    postpone_output             {{ cfg.postpone_output | default(1460) }};
+
+    # cache files for a short period of time
+    # 'max' maximal number of cached filds
+    # 'inactive' exclude files that are not accessed within this period of time
+    open_file_cache             max={{ cfg.open_file_cache_max | default(1000) }} inactive={{ cfg.open_file_cache_inactive | default('20s') }};
+    # invalidate cached file after this time
+    open_file_cache_valid       {{ cfg.open_file_cache_valid | default(30) }};
+    # cache only if the file has been accessed a couple of times
+    open_file_cache_min_uses    {{ cfg.open_file_cache_min_uses | default(5) }};
+    open_file_cache_errors      off;
+
+
+    ###############################################
+    # Logging Settings
+    ###############################################
+
+    # http://nginx.org/en/docs/http/ngx_http_log_module.html
+
+    # logging format
+    log_format                  access_log_format '$remote_addr - $remote_user [$time_local] '
+                                                    '"$request" $status $body_bytes_sent '
+                                                    '"$http_referer" "$http_user_agent"';
+
+    access_log  /var/log/nginx/access.log  access_log_format;
+
+
+    ###############################################
+    # Gzip Settings
+    ###############################################
+
+    # http://nginx.org/en/docs/http/ngx_http_gzip_module.html
+
+    gzip                        on;
+    # minimum length of a response that will be gzipped
+    gzip_min_length             1000;
+    gzip_vary                   on;
+    gzip_proxied                expired no-cache no-store private auth;
+    gzip_comp_level             5;
+    gzip_http_version           1.1;
+    gzip_types                  application/atom+xml application/javascript application/json application/ld+json application/manifest+json application/rss+xml application/vnd.geo+json application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/bmp image/svg+xml image/x-icon text/cache-manifest text/css text/plain text/vcard text/vnd.rim.location.xloc text/vtt text/x-component text/x-cross-domain-policy;
+
+
+    ###############################################
+    # TLS
+    ###############################################
+
+    ssl_protocols               {{ cfg.ssl_protocols | default('TLSv1.2 TLSv1.3') }};
+
+    # let the client decide which cipher to use, so hardware capabilities can fully utilized
+    ssl_prefer_server_ciphers   off;
+    # accepted ciphers, use `openssl ciphers -v '...'` to get the actual ciphers.
+    ssl_ciphers                 {{ cfg.ssl_ciphers | default('ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:EECDH+AESGCM:EDH+AESGCM') }};
+
+    # elliptic curve type
+    ssl_ecdh_curve              {{ cfg.ssl_ecdh_curve | default('secp521r1:secp384r1:prime256v1') }};
+
+    # boost performance
+    ssl_session_cache           {{ cfg.ssl_session_cache | default('shared:SSL:20m') }};
+    ssl_session_timeout         {{ cfg.ssl_session_timeout | default('10m') }};
+    ssl_session_tickets         {{ as_bool(cfg.ssl_session_tickets | default(false)) }};
+    {% if cfg.ssl_stapling | default(false) %}
+
+    # OCSP stapling
+    ssl_stapling                on;
+    ssl_stapling_verify         on;
+    {% endif %}
+    {% if cfg.ssl_certificate is defined %}
+
+    # TLS key and certificate
+    ssl_certificate             {{ cfg.ssl_certificate }};
+    ssl_certificate_key         {{ cfg.ssl_certificate_key }};
+    {% endif %}
+    {% if cfg.ssl_dhparam is defined %}
+
+    # Diffie-Hellman parameter
+    ssl_dhparam                 {{ cfg.ssl_dhparam }};
+    {% endif %}
+    {% if cfg.headers is defined %}
+
+    {% for header in cfg.headers %}
+    add_header                  {{ header }};
+    {% endfor %}
+    {% endif %}
+
+
+    ###############################################
+    # Basic Rate Limiting
+    ###############################################
+
+    geo $limited {
+        # all ips shall be limeted in requests
+        default 1;
+        {% for ip in cfg.real_ip_from|default([]) %}
+        {{ ip }} 0;
+        {% endfor %}
+    }
+
+    map $limited $limit {
+        0 "";
+        1 $binary_remote_addr;
+    }
+    limit_conn_status           429;
+    limit_req_status            429;
+
+
+    ###############################################
+    # Other
+    ###############################################
+
+    {% if cfg.behind_proxy | default(false) -%}
+    # get client ip from header set by reverse proxy
+    {% for ip in cfg.real_ip_from|default([]) %}
+    set_real_ip_from            {{ ip }};
+    {% endfor %}
+    real_ip_header              {{ cfg.real_ip_header | default('X-Forwarded-For') }};
+
+    # Set $real_scheme variable to X-Forwarded-Proto passed by the reverse proxy
+    map $http_x_forwarded_proto $real_scheme {
+        default $http_x_forwarded_proto;
+        ''      $scheme;
+    }
+    {%- else %}
+    # Define variable 'real_scheme' and assign the value of 'scheme'
+    map $scheme $real_scheme {
+        default $scheme;
+    }
+    {%- endif %}
+
+    map $real_scheme $real_https {
+        default 0;
+        'https' 1;
+    }
+
+    map $real_scheme $real_server_port {
+        default 80;
+        'https' 443;
+    }
+
+    port_in_redirect            {{ as_bool(cfg.port_in_redirect | default(false)) }};
+
+    {% if cfg.custom_config is defined %}
+    {% for line in (cfg.custom_config if cfg.custom_config is list else [cfg.custom_config]) %}
+    {{ line | indent(4) }}
+    {% endfor %}
+    {% endif %}
+
+
+    ###############################################
+    # Virtual hosts
+    ###############################################
+
+    include                     /etc/nginx/conf.d/*.conf;
+}

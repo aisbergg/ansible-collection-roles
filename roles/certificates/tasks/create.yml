@@ -1,0 +1,51 @@
+---
+- name: assert correctness of configuration
+  tags: [always]
+  ansible.builtin.assert:
+    that:
+      - create.dest is defined and create.dest is string
+
+- name: make destination path absolute ({{ create.dest }})
+  tags: [always]
+  ansible.builtin.set_fact:
+    key_dest: "{{ (create.dest is abs) | ternary(create.dest, __certificates_key_base_path ~ '/' ~ create.dest) ~ '.key' }}"
+    cert_dest: "{{ (create.dest is abs) | ternary(create.dest, __certificates_cert_base_path ~ '/' ~ create.dest) ~ '.crt' }}"
+    handler: "{{ create.handler | default(certificates_certs_handler | default(certificates_handler | default(omit))) }}"
+
+- when: create.state | default('present') == 'absent'
+  block:
+    - name: remove key file ({{ key_dest }})
+      tags: [certs, certs_remove, remove]
+      ansible.builtin.file:
+        path: "{{ key_dest }}"
+        state: absent
+      notify: "{{ handler }}"
+
+    - name: remove certificate file ({{ cert_dest }})
+      tags: [certs, certs_remove, remove]
+      ansible.builtin.file:
+        path: "{{ cert_dest }}"
+        state: absent
+      notify: "{{ handler }}"
+
+- when: create.state | default('present') == 'present'
+  block:
+    - name: create self-signed certificate ({{ create.dest }})
+      tags: [certs, certs_create, create]
+      community.crypto.openssl_privatekey:
+        path: "{{ key_dest }}"
+        type: "{{ create.type | default(omit) }}"
+        curve: "{{ create.curve | default(omit) }}"
+        cipher: "{{ create.cipher | default(omit) }}"
+        passphrase: "{{ create.passphrase | default(omit) }}"
+        mode: "{{ create.mode | default('0600') }}"
+
+    - name: create self-signed certificate ({{ create.dest }})
+      tags: [certs, certs_create, create]
+      community.crypto.x509_certificate:
+        path: "{{ cert_dest }}"
+        privatekey_path: "{{ key_dest }}"
+        subject: "{{ create.subject | default(omit) }}"
+        mode: "{{ create.mode | default('0600') }}"
+        force: "{{ create.force | default(omit) }}"
+        provider: selfsigned

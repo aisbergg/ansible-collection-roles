@@ -1,0 +1,24 @@
+---
+- name: gather service facts
+  tags: [systemd-resolved, resolved, dns]
+  ansible.builtin.service_facts:
+  when: ansible_facts.services is not defined
+
+- name: include installation tasks
+  tags: [systemd-resolved, resolved, dns]
+  ansible.builtin.import_tasks: install.yml
+
+- name: include other resolver tasks
+  tags: [systemd-resolved, resolved, dns]
+  ansible.builtin.include_tasks: disable_other_resolvers.yml
+  when:
+    - systemd_resolved_disable_other_resolvers
+    - systemd_resolved_service_enabled or systemd_resolved_service_state != 'stopped'
+
+- name: include configuration tasks
+  tags: [systemd-resolved, resolved, dns]
+  ansible.builtin.import_tasks: configure.yml
+
+- name: include service tasks
+  tags: [systemd-resolved, resolved, dns]
+  ansible.builtin.import_tasks: service.yml

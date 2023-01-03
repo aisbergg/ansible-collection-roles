@@ -1,0 +1,6 @@
+---
+- name: reload sysctl
+  tags: sysctl
+  ansible.builtin.command: sysctl --system --quiet
+  changed_when: true
+  when: ansible_virtualization_type != "docker"

@@ -1,0 +1,30 @@
+---
+- name: assert correctness of configuration
+  tags: [always]
+  ansible.builtin.assert:
+    that:
+      - ca_cert.dest is defined and ca_cert.dest is string
+      - (ca_cert.file is defined and ca_cert.file is string)
+        or (ca_cert.url is defined and ca_cert.url is string)
+        or (ca_cert.content is defined and ca_cert.content is string)
+
+- name: make destination path absolute ({{ ca_cert.dest }})
+  tags: [always]
+  ansible.builtin.set_fact:
+    dest: "{{ (ca_cert.dest is abs) | ternary(ca_cert.dest, __certificates_ca_cert_base_path ~ '/' ~ ca_cert.dest) }}"
+    handler: "{{ ['update ca certificates'] + (ca_cert.handler | default(certificates_certs_handler | default(certificates_handler | default([])))) }}"
+
+- name: remove certificate file ({{ ca_cert.dest }})
+  tags: [certs, certs_remove, remove]
+  when: ca_cert.state | default('present') == 'absent'
+  ansible.builtin.file:
+    path: "{{ dest }}"
+    state: absent
+  notify: "{{ handler }}"
+
+- name: include certificate copy tasks ({{ ca_cert.dest }})
+  tags: [certs, certs_copy, copy]
+  when: ca_cert.state | default('present') == 'present'
+  ansible.builtin.include_tasks: copy.yml
+  vars:
+    element: "{{ ca_cert }}"

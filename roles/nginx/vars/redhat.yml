@@ -1,0 +1,8 @@
+---
+__nginx_tls_certs_path: /etc/pki/tls/certs
+__nginx_tls_key_path: /etc/pki/tls/private
+
+__nginx_packages:
+  - "nginx{{ '-' ~ nginx_version if nginx_version else '' }}"
+  - openssl
+  - python3-cryptography  # required to extract PKCS12 files

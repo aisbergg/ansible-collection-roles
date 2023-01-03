@@ -1,0 +1,19 @@
+{{ ansible_managed | comment }}
+{% macro fmt_align(value, pad=7) %}{{ "{:<{pad}}".format(value, pad=pad) }}{% endmacro %}
+{% macro fmt_default(value) %}{{ "-" if value is none else value }}{% endmacro %}
+{% macro fmt_bool(value) %}{{ "-" if value is none else (value | bool | ternary('y', 'n')) }}{% endmacro %}
+
+# ------------------------------------------------------------------------------
+# Postfix Master Configuration
+#
+# Manpage: http://www.postfix.org/master.5.html
+# Sample: https://exampleconfig.com/view/postfix-centos8-etc-postfix-master-cf
+# ------------------------------------------------------------------------------
+
+# ==============================================================================
+# service   type    private unpriv  chroot  wakeup  maxproc command + args
+#                   (yes)   (yes)   (yes)   (never) (100)
+# ==============================================================================
+{% for service in cfg %}
+{{ fmt_align(service.name, pad=11) }} {{ fmt_align(service.type) }} {{ fmt_align(fmt_bool(service.private|default(None))) }} {{ fmt_align(fmt_bool(service.unpriv|default(None))) }} {{ fmt_align(fmt_bool(service.chroot|default(None))) }} {{ fmt_align(fmt_default(service.wakeup|default(None))) }} {{ fmt_align(fmt_default(service.maxproc|default(None))) }} {{ service.command|indent(2) }}
+{% endfor %}

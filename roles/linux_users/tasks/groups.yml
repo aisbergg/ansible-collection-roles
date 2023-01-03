@@ -1,0 +1,22 @@
+---
+- name: manage Linux groups
+  ansible.builtin.group:
+    gid:    "{{ group.gid | default(omit) }}"
+    local:  "{{ group.local | default(omit) }}"
+    name:   "{{ group.name }}"
+    state:  "{{ group.state | default('present') }}"
+    system: "{{ group.system | default(omit) }}"
+  loop: "{{ linux_groups }}"
+  loop_control:
+    loop_var: group
+    label: "{{ group.name }} to be {{ group.state | default('present') }}"
+
+- name: add primary groups for present users
+  ansible.builtin.group:
+    name:   "{{ user.group | default(user.name) }}"
+    system: "{{ user.system | default(omit) }}"
+    state:  present
+  loop: "{{ linux_users | selectattr2('state', '==', 'present', default='present') | list }}"
+  loop_control:
+    loop_var: user
+    label: "{{ user.name }}"

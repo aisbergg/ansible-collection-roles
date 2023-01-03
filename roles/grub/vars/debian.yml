@@ -1,0 +1,15 @@
+---
+# defaults for Debian distributions
+
+# grub mkconfig binary
+__grub_mkconfig_command: /usr/sbin/grub-mkconfig
+
+# defaults for grub config
+__grub_config_defaults:
+  GRUB_DEFAULT: 0
+  GRUB_HIDDEN_TIMEOUT: 0
+  GRUB_HIDDEN_TIMEOUT_QUIET: true
+  GRUB_TIMEOUT: 10
+  GRUB_DISTRIBUTOR: "$(lsb_release -i -s 2> /dev/null || echo Debian)"
+  GRUB_CMDLINE_LINUX_DEFAULT: "quiet splash"
+  GRUB_CMDLINE_LINUX: ""

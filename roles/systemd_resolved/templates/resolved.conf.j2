@@ -1,0 +1,18 @@
+{{ ansible_managed | comment }}
+
+#jinja2: trim_blocks: "true", lstrip_blocks: "true"
+# See resolved.conf(5) for details
+
+[Resolve]
+DNS={{ config.DNS | join(" ") }}
+FallbackDNS={{ config.FallbackDNS | join(" ") }}
+Domains={{ config.Domains | join(" ") }}
+LLMNR={{ config.LLMNR | string | lower }}
+MulticastDNS={{ config.MulticastDNS | string | lower }}
+DNSSEC={{ config.DNSSEC | string | lower }}
+DNSOverTLS={{ config.DNSOverTLS | string | lower }}
+Cache={{ config.Cache | string | lower }}
+DNSStubListener={{ config.DNSStubListener | string | lower }}
+{% if ansible_facts.packages["systemd"][0].version is version('240', '>=') %}
+ReadEtcHosts={{ config.ReadEtcHosts | string | lower }}
+{% endif %}

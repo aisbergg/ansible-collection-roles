@@ -1,0 +1,3 @@
+---
+systemd_journald_config: {}
+systemd_journald_wipe_persistent_storage: false

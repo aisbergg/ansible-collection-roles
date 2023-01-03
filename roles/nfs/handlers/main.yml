@@ -1,0 +1,8 @@
+---
+- name: restart nfs server
+  ansible.builtin.service:
+    name: "{{ __nfs_server_service }}"
+    state: restarted
+
+- name: export all directories
+  ansible.builtin.command: exportfs -a

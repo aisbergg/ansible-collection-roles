@@ -1,0 +1,61 @@
+---
+- name: configure aliases
+  ansible.builtin.blockinfile:
+    path: /etc/aliases
+    block: |
+      {% for alias in postfix_aliases %}
+      {{ alias.src }}: {{ alias.dest }}
+      {% endfor %}
+    mode: "0644"
+  when: postfix_aliases
+  notify:
+    - rebuild alias database
+    - reload postfix
+
+- name: create main configuration
+  ansible.builtin.template:
+    src: etc/postfix/main.cf.j2
+    dest: "{{ __postfix_conf_path }}/main.cf"
+    owner: root
+    group: root
+    mode: 0644
+    trim_blocks: true
+    lstrip_blocks: true
+  notify: reload postfix
+  vars:
+    cfg: "{{ __postfix_main_config_defaults | combine(postfix_main_config) }}"
+
+- name: create master configuration
+  ansible.builtin.template:
+    src: etc/postfix/master.cf.j2
+    dest: "{{ __postfix_conf_path }}/master.cf"
+    owner: root
+    group: root
+    mode: 0644
+    trim_blocks: true
+    lstrip_blocks: true
+  notify: reload postfix
+  vars:
+    cfg: "{{ postfix_master_config }}"
+
+- name: create configuration maps
+  ansible.builtin.template:
+    src: etc/postfix/map.j2
+    dest: "{{ __postfix_conf_path }}/{{ item.name }}"
+    owner: root
+    group: root
+    mode: 0644
+    trim_blocks: true
+    lstrip_blocks: true
+  notify: reload postfix
+  vars:
+    map: "{{ item.map }}"
+  loop_control:
+    label: "{{ item.name }}"
+  loop: "{{ postfix_config_maps }}"
+
+- name: process configuration maps
+  ansible.builtin.command: "postmap {{ (__postfix_conf_path ~ '/' ~ item.name)|quote }}"
+  loop_control:
+    label: "{{ item.name }}"
+  loop: "{{ postfix_config_maps }}"

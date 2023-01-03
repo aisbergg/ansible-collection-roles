@@ -1,0 +1,8 @@
+---
+- name: restart earlyoom
+  ansible.builtin.service:
+    name: "{{ __earlyoom_service_name }}"
+    state: restarted
+  when:
+    - earlyoom_service_restart_on_change | bool
+    - earlyoom_service_state != 'stopped'

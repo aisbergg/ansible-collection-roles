@@ -1,0 +1,18 @@
+---
+- name: find existing vhost files
+  ansible.builtin.find:
+    paths: "{{ __nginx_vhosts_path }}"
+    patterns: "*.conf"
+    depth: 1
+  register: found_vhost_files
+
+- name: remove unmanaged vhosts files
+  ansible.builtin.file:
+    path: "{{ __nginx_vhosts_path }}/{{ item }}"
+    state: absent
+  notify: reload nginx
+  loop: "{{
+      found_vhost_files.files | map(attribute='path') | map('path_relative_to', __nginx_vhosts_path)
+      | difference(nginx_vhosts | map(attribute='filename'))
+      | difference(nginx_unmanaged_configs_allowlist)
+    }}"

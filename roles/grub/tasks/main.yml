@@ -1,0 +1,17 @@
+---
+- name: include OS-specific variables
+  tags: [grub2, always]
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      skip: true
+
+- name: include installation tasks
+  tags: [grub2, grub2_install]
+  ansible.builtin.import_tasks: install.yml
+
+- name: include configuration tasks
+  tags: [grub2, grub2_config]
+  ansible.builtin.import_tasks: configure.yml

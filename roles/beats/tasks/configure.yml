@@ -1,0 +1,25 @@
+---
+- name: ensure config dir exists
+  ansible.builtin.file:
+    path: "/etc/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  when: "lookup('vars', item ~ '_install_state') in ['present', 'latest']"
+  loop: "{{ __available_beats }}"
+
+- name: configure Beats
+  ansible.builtin.template:
+    src: "etc/beat/beat.yml.j2"
+    dest: "/etc/{{ item }}/{{ item }}.yml"
+    owner: root
+    group: root
+    mode: 0640
+  vars:
+    name: "{{ item }}"
+    config: "{{ lookup('vars', item ~ '_config') }}"
+  register: __beats_restart
+  notify: restart beats
+  when: "lookup('vars', item ~ '_install_state') in ['present', 'latest']"
+  loop: "{{ __available_beats }}"

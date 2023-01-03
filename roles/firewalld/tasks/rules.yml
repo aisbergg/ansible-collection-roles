@@ -1,0 +1,49 @@
+---
+- name: manage permanent firewall rules
+  ansible.posix.firewalld:
+    icmp_block: "{{ item.icmp_block | default(omit) }}"
+    icmp_block_inversion: "{{ item.icmp_block_inversion | default(omit) }}"
+    immediate: "{{ item.immediate | default(false) }}"
+    interface: "{{ item.interface | default(omit) }}"
+    masquerade: "{{ item.masquerade | default(omit) }}"
+    offline: "{{ item.offline | default(true) }}"
+    permanent: "{{ item.permanent | default(true) }}"
+    port: "{{ item.port | default(omit) }}"
+    port_forward: "{{ item.port_forward | default(omit) }}"
+    rich_rule: "{{ item.rich_rule | default(omit) }}"
+    service: "{{ item.service | default(omit) }}"
+    source: "{{ item.source | default(omit) }}"
+    state: "{{ item.state | default('enabled') }}"
+    target: "{{ item.target | default('enabled') }}"
+    timeout: "{{ item.timeout | default(omit) }}"
+    zone: "{{ item.zone | default(omit) }}"
+  when:
+    - firewalld_service_state != 'stopped'
+    - item.permanent | default(true)
+  loop: "{{ firewalld_rules }}"
+  notify: reload firewalld
+
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: manage temporary firewall rules
+  ansible.posix.firewalld:
+    icmp_block: "{{ item.icmp_block | default(omit) }}"
+    icmp_block_inversion: "{{ item.icmp_block_inversion | default(omit) }}"
+    immediate: "{{ item.immediate | default(false) }}"
+    interface: "{{ item.interface | default(omit) }}"
+    masquerade: "{{ item.masquerade | default(omit) }}"
+    permanent: "{{ item.permanent | default(true) }}"
+    port: "{{ item.port | default(omit) }}"
+    port_forward: "{{ item.port_forward | default(omit) }}"
+    rich_rule: "{{ item.rich_rule | default(omit) }}"
+    service: "{{ item.service | default(omit) }}"
+    source: "{{ item.source | default(omit) }}"
+    state: "{{ item.state | default('enabled') }}"
+    target: "{{ item.target | default(omit) }}"
+    timeout: "{{ item.timeout | default(omit) }}"
+    zone: "{{ item.zone | default(omit) }}"
+  when:
+    - firewalld_service_state != 'stopped'
+    - not (item.permanent | default(true))
+  loop: "{{ firewalld_rules }}"

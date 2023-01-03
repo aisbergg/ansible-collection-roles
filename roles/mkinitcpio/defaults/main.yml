@@ -1,0 +1,9 @@
+---
+# mkinitcpio config variables
+mkinitcpio_config: {}
+
+# force mkinitcpio to create the initial ramdisk
+mkinitcpio_force_create: false
+
+# remove fallback form the presets
+mkinitcpio_disable_fallback_preset: false

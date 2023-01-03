@@ -1,0 +1,30 @@
+---
+- name: assert correctness of configuration
+  tags: [always]
+  ansible.builtin.assert:
+    that:
+      - key.dest is defined and key.dest is string
+      - (key.file is defined and key.file is string)
+        or (key.url is defined and key.url is string)
+        or (key.content is defined and key.content is string)
+
+- name: make destination path absolute ({{ key.dest }})
+  tags: [always]
+  ansible.builtin.set_fact:
+    dest: "{{ (key.dest is abs) | ternary(key.dest, __certificates_key_base_path ~ '/' ~ key.dest) }}"
+    handler: "{{ key.handler | default(certificates_certs_handler | default(certificates_handler | default(omit))) }}"
+
+- name: remove certificate file ({{ key.dest }})
+  tags: [certs, certs_remove, remove]
+  when: key.state | default('present') == 'absent'
+  ansible.builtin.file:
+    path: "{{ dest }}"
+    state: absent
+  notify: "{{ handler }}"
+
+- name: include certificate copy tasks ({{ key.dest }})
+  tags: [certs, certs_copy, copy]
+  when: key.state | default('present') == 'present'
+  ansible.builtin.include_tasks: copy.yml
+  vars:
+    element: "{{ key }}"

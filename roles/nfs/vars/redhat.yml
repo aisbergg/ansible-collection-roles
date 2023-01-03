@@ -1,0 +1,5 @@
+---
+__nfs_client_requirements:
+  - nfs-utils
+
+__nfs_server_requirements: "{{ ['sssd-nfs-idmap'] if nfs_enable_sssd_integration else [] }}"

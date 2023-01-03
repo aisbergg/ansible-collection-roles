@@ -1,0 +1,20 @@
+{{ ansible_managed | comment }}
+
+# ------------------------------------------------------------------------------
+# Postfix Main Configuration
+#
+# To get a list of defaults run `postconf -d`.
+#
+# Manpage: http://www.postfix.org/postconf.5.html
+# Sample: https://exampleconfig.com/view/postfix-centos8-etc-postfix-main-cf
+# ------------------------------------------------------------------------------
+
+{% for option, value in cfg|default({})|dictsort() if value is not none %}
+{%   if value is list %}
+{{ option }} = {{ value | join(', ') }}
+{%   elif value is boolean %}
+{{ option }} = {{ value | ternary('yes', 'no') }}
+{%   else %}
+{{ option }} = {{ value | string | indent(4) }}
+{%   endif %}
+{% endfor %}

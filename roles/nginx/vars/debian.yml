@@ -1,0 +1,7 @@
+---
+__nginx_packages:
+  - "nginx{{ '=' ~ nginx_version if nginx_version else '' }}"
+  - openssl
+  - python3-cryptography  # required to extract PKCS12 files
+
+__nginx_user: www-data

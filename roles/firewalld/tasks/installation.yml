@@ -1,0 +1,26 @@
+---
+- name: install Firewalld requirements (Debian)
+  ansible.builtin.apt:
+    name:
+      - nftables
+      - firewalld
+    state: present
+    default_release: "{{ (firewalld_debian_repo | length > 0) | ternary(firewalld_debian_repo, omit) }}"
+  when: (ansible_os_family | lower) == 'debian'
+
+- name: install Firewalld requirements (RedHat)
+  ansible.builtin.yum:
+    name:
+      - nftables
+      - firewalld
+    state: present
+    enablerepo: "{{ (firewalld_redhat_enablerepo | length > 0) | ternary(firewalld_redhat_enablerepo, omit) }}"
+  when: (ansible_os_family | lower) == 'redhat'
+
+- name: install Firewalld requirements (Arch Linux)
+  community.general.pacman:
+    name:
+      - nftables
+      - firewalld
+    state: present
+  when: (ansible_os_family | lower) == 'archlinux'

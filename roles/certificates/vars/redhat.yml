@@ -1,0 +1,6 @@
+---
+__certificates_cert_base_path: /etc/pki/tls/certs
+__certificates_key_base_path: /etc/pki/tls/private
+__certificates_ca_cert_base_path: /etc/pki/ca-trust/source/anchors
+
+__certificates_ca_cert_update_command: update-ca-trust

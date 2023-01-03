@@ -1,0 +1,25 @@
+---
+- name: install EarlyOOM
+  tags: [earlyoom, earlyoom_install]
+  ansible.builtin.package:
+    name: "{{ __earlyoom_dependencies }}"
+    state: present
+
+- name: configure EarlyOOM
+  tags: [earlyoom, earlyoom_config]
+  ansible.builtin.template:
+    src: earlyoom.j2
+    dest: "{{ __earlyoom_config_file }}"
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart earlyoom
+  vars:
+    cfg: "{{ __earlyoom_config_defaults | combine(earlyoom_config) }}"
+
+- name: manage EarlyOOM service
+  tags: [earlyoom, earlyoom_service]
+  ansible.builtin.service:
+    name: "{{ __earlyoom_service_name }}"
+    state: "{{ earlyoom_service_state }}"
+    enabled: "{{ earlyoom_service_enabled }}"

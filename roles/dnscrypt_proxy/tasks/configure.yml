@@ -1,0 +1,57 @@
+---
+- name: configure DNSCrypt proxy
+  ansible.builtin.template:
+    src: dnscrypt-proxy.toml.j2
+    dest: "{{ __dnscrypt_proxy_config_file }}"
+    owner: root
+    group: root
+    mode: 0644
+    validate: dnscrypt-proxy --config '%s' --check
+  vars:
+    cfg: "{{ __dnscrypt_proxy_config_defauls | combine(dnscrypt_proxy_config) }}"
+  notify: restart dnscrypt-proxy
+
+- when: dnscrypt_proxy_service_enabled or
+        dnscrypt_proxy_service_state != 'stopped'
+  block:
+    - name: disable systemd-resolved service
+      ansible.builtin.service:
+        name: systemd-resolved
+        state: stopped
+        enabled: false
+
+    - name: check if NetworkManager is available
+      ansible.builtin.shell: command -v networkctl  # noqa: command-instead-of-shell
+      changed_when: false
+      check_mode: false
+      register: networkctl_available
+
+    - name: disable the NetworkManager internal DNS resolver
+      ini_file:
+        path: /etc/NetworkManager/NetworkManager.conf
+        section: main
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+        mode: 0600
+      notify: restart networkmanager
+      when: networkctl_available.stdout | length > 0
+      loop:
+        - option: dns
+          value: none
+        - option: systemd-resolved
+          value: "false"
+
+    - name: ensure DNSCrypt is set as system DNS resolver
+      ansible.builtin.template:
+        src: resolv.conf.j2
+        dest: /etc/resolv.conf
+        owner: root
+        group: root
+        mode: 0644
+        backup: true
+
+- name: manage DNSCrypt proxy service
+  ansible.builtin.service:
+    name: "{{ __dnscrypt_proxy_service_name }}"
+    state: "{{ dnscrypt_proxy_service_state }}"
+    enabled: "{{ dnscrypt_proxy_service_enabled }}"

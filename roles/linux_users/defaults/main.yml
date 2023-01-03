@@ -1,0 +1,38 @@
+---
+# list of linux users
+# Example:
+#   linux_users:
+#     - name: xyz               # required
+#       uid: 1000               # optional
+#       comment: ''             # optional
+#       group: xyz              # optional, default: name of user
+#       groups: sudo,admin      # optional
+#       append: false           # optional
+#       password: XXXX          # optional, hashed password
+#       plain_password: pw      # optional, plaintext password
+#       update_password: always # optional
+#       shell: '/bin/bash'      # optional
+#       home: '/home/xyz'       # optional
+#       system: false           # optional
+#       state: present          # optional
+#       remove: false           # optional
+#       authorized_key: ssh-ed25519... # optional
+#
+# for more details on options see: https://docs.ansible.com/ansible/latest/modules/user_module.html
+linux_users: []
+
+# list of linux groups
+# Example:
+#   linux_groups:
+#     - name: xyz       # required
+#       system: false   # optional
+#       gid: 1000       # optional
+#       state: present  # optional
+#
+# for more details on options see: https://docs.ansible.com/ansible/latest/modules/group_module.html
+linux_groups: []
+
+# hash scheme for plaintext passwords
+linux_users_hash_scheme: sha512
+# rounds for hash of plaintext passwords
+linux_users_hash_rounds: 29000

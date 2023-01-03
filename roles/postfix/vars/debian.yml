@@ -1,0 +1,8 @@
+---
+
+__postfix_requirements:
+  - postfix
+  - openssl
+  - python3-cryptography  # required to extract PKCS12 files
+
+__postfix_daemon_directory: /usr/lib/postfix/sbin

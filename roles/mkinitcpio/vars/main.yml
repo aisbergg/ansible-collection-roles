@@ -1,0 +1,16 @@
+---
+__mkinitcpio_config_defaults:
+  MODULES: []
+  BINARIES: []
+  FILES: []
+  HOOKS:
+    - base
+    - udev
+    - autodetect
+    - modconf
+    - block
+    - filesystems
+    - keyboard
+    - fsck
+  COMPRESSION: lz4
+  COMPRESSION_OPTIONS: []

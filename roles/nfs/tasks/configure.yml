@@ -1,0 +1,73 @@
+---
+# ------------------------------------------------------------------------------
+# Server
+# ------------------------------------------------------------------------------
+
+- when: nfs_role in ['server', 'all']
+  block:
+    - name: create nfs configuration
+      ansible.builtin.template:
+        src: nfs.conf.j2
+        dest: /etc/nfs.conf
+        owner: root
+        group: root
+        mode: 0644
+      vars:
+        cfg: "{{ __nfs_config_defaults | combine(nfs_config, recursive=true) }}"
+      notify: restart nfs server
+
+    - name: create idmapd configuration
+      ansible.builtin.template:
+        src: idmapd.conf.j2
+        dest: /etc/idmapd.conf
+        owner: root
+        group: root
+        mode: 0644
+      vars:
+        cfg: "{{
+            __nfs_idmapd_config_defaults |
+            combine(nfs_enable_sssd_integration | ternary(__nfs_idmapd_config_sssd, {}), recursive=true) |
+            combine(nfs_idmapd_config, recursive=true)
+          }}"
+      notify: restart nfs server
+
+    - name: create nfs export directories
+      ansible.builtin.file:
+        path: "{{ export.path | mandatory }}"
+        state: directory
+        owner: "{{ export.owner | default(omit) }}"
+        group: "{{ export.group | default(omit) }}"
+        mode: "{{ export.mode | default(omit) }}"
+        recurse: "{{ export.recurse | default(false) }}"
+      loop: "{{ nfs_exports }}"
+      loop_control:
+        loop_var: export
+        label: "{{ export.path }}"
+
+    - name: configure nfs exports
+      ansible.builtin.template:
+        src: exports.j2
+        dest: /etc/exports
+        owner: root
+        group: root
+        mode: 0644
+      notify: export all directories
+
+
+
+# ------------------------------------------------------------------------------
+# Client
+# ------------------------------------------------------------------------------
+
+- when: nfs_role in ['client', 'all']
+  block:
+    - name: create nfs mount configuration
+      ansible.builtin.template:
+        src: nfsmount.conf.j2
+        dest: /etc/nfsmount.conf
+        owner: root
+        group: root
+        mode: 0644
+      vars:
+        cfg: "{{ __nfs_mount_config_defaults | combine(nfs_mount_config, recursive=true) }}"
+

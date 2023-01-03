@@ -1,0 +1,34 @@
+---
+dependencies: []
+
+galaxy_info:
+  author: André Lehmann
+  namespace: aisbergg
+  role_name: linux_users
+  description: Manage users, groups and authorized keys in Linux systems.
+  company: none
+  issue_tracker_url: https://github.com/aisbergg/ansible-role-linux-users/issues
+  license: MIT
+  min_ansible_version: "2.10"
+
+  platforms:
+    - name: EL
+      versions:
+        - "7"
+        - "8"
+    - name: Fedora
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - all
+    - name: ArchLinux
+      versions:
+        - all
+
+  galaxy_tags:
+    - users
+    - groups

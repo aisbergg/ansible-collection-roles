@@ -1,0 +1,21 @@
+---
+- name: include OS-specific variables
+  tags: [chrony, always]
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family | lower }}_{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      skip: true
+
+- name: include installation tasks
+  tags: [chrony, chrony_install, install]
+  ansible.builtin.import_tasks: install.yml
+
+- name: include configuration tasks
+  tags: [chrony, chrony_config, config]
+  ansible.builtin.import_tasks: configure.yml
+
+- name: include service tasks
+  tags: [chrony, chrony_service, service]
+  ansible.builtin.import_tasks: service.yml

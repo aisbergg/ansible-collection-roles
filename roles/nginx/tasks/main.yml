@@ -1,0 +1,37 @@
+---
+- name: include OS-specific variables
+  tags: [nginx, always]
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family | lower }}_{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+        - "{{ ansible_distribution | lower }}_{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+      skip: true
+
+- name: include installation tasks
+  tags: [nginx, nginx_install, install]
+  ansible.builtin.include_tasks: "{{ item }}"
+  with_first_found:
+    - "install_{{ ansible_os_family | lower }}_{{ ansible_distribution_major_version }}.yml"
+    - "install_{{ ansible_os_family | lower }}.yml"
+    - "install_{{ ansible_distribution | lower }}_{{ ansible_distribution_major_version }}.yml"
+    - "install_{{ ansible_distribution | lower }}.yml"
+
+- name: include certificate copy tasks
+  ansible.builtin.import_tasks: copy_certificates.yml
+  tags: [nginx, nginx-certs, certs]
+
+- name: include dummy certificate creation tasks
+  ansible.builtin.include_tasks: create_dummy_certificate.yml
+  tags: [nginx, nginx-certs, certs]
+  when: nginx_create_dummy_certificate | bool
+
+- name: include configuration tasks
+  ansible.builtin.import_tasks: configure.yml
+  tags: [nginx, nginx_config, config]
+
+- name: include service tasks
+  ansible.builtin.import_tasks: service.yml
+  tags: [nginx, nginx_service, service]

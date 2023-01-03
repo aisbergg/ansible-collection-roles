@@ -1,0 +1,4 @@
+---
+__cron_service_name: cron.service
+__cron_requirements:
+  - cron

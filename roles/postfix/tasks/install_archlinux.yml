@@ -1,0 +1,5 @@
+---
+- name: install packages (Arch Linux)
+  community.general.pacman:
+    name: "{{ __postfix_requirements + postfix_extra_packages }}"
+    state: present

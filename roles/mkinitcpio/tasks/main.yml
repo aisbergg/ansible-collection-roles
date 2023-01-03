@@ -1,0 +1,41 @@
+---
+- name: create mkinitcpio config
+  tags: [mkinitcpio]
+  ansible.builtin.template:
+    src: mkinitcpio.conf.j2
+    dest: /etc/mkinitcpio.conf
+    owner: root
+    group: root
+    mode: 0644
+    lstrip_blocks: true
+    validate: bash -n %s
+  notify: create initial ramdisk
+  vars:
+    cfg: "{{ __mkinitcpio_config_defaults | combine(mkinitcpio_config) }}"
+
+- name: find preset files
+  tags: [mkinitcpio]
+  ansible.builtin.find:
+    paths: /etc/mkinitcpio.d/
+    patterns: "*.preset"
+  register: preset_files
+
+- name: include preset tasks
+  tags: [mkinitcpio]
+  ansible.builtin.include_tasks: preset.yml
+  vars:
+    path: "{{ item.path }}"
+  loop_control:
+    label: "{{ item.path }}"
+  when: mkinitcpio_disable_fallback_preset
+  loop: "{{ preset_files.files | default([]) }}"
+
+- name: force creation of initial ramdisk
+  tags: [mkinitcpio]
+  ansible.builtin.command: /bin/true
+  notify: create initial ramdisk
+  when: mkinitcpio_force_create
+
+- name: flush pending handlers
+  tags: [mkinitcpio]
+  ansible.builtin.meta: flush_handlers

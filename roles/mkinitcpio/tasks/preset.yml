@@ -1,0 +1,7 @@
+---
+- name: disable fallback preset for '{{ path | basename | replace('.preset', '') }}'
+  ansible.builtin.lineinfile:
+    path: "{{ path }}"
+    regexp: "^PRESETS="
+    line: "PRESETS=(\"default\")"
+  notify: create initial ramdisk

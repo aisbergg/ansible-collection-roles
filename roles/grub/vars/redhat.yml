@@ -1,0 +1,18 @@
+---
+# defaults for RedHat distributions
+
+# grub mkconfig binary
+__grub_mkconfig_command: /usr/sbin/grub2-mkconfig
+
+# grub boot config file
+__grub_boot_cfg: /boot/grub2/grub.cfg
+
+# defaults for grub config
+__grub_config_defaults:
+  GRUB_DEFAULT: saved
+  GRUB_TIMEOUT: 1
+  GRUB_DISTRIBUTOR: "$(sed 's, release .*$,,g' /etc/system-release)"
+  GRUB_DISABLE_SUBMENU: true
+  GRUB_TERMINAL_OUTPUT: console
+  GRUB_CMDLINE_LINUX_DEFAULT: "crashkernel=auto rhgb quiet"
+  GRUB_DISABLE_RECOVERY: true

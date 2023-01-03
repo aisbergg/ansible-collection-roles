@@ -1,0 +1,13 @@
+---
+- name: create private key for dummy certificate
+  community.crypto.openssl_privatekey:
+    path: "{{ __nginx_tls_key_path }}/dummy.key"
+    type: ECC
+    curve: secp256r1
+
+- name: create a self-signed dummy certificate
+  community.crypto.x509_certificate:
+    path: "{{ __nginx_tls_certs_path }}/dummy.crt"
+    privatekey_path: "{{ __nginx_tls_key_path }}/dummy.key"
+    mode: 0600
+    provider: selfsigned

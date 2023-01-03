@@ -1,0 +1,27 @@
+---
+- name: include OS-specific variables
+  tags: [localization, always]
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family | lower }}_{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      skip: true
+
+- name: install requirements and language packs
+  tags: [localization, localization_install]
+  ansible.builtin.package:
+    name: "{{ __localization_requirements + localization_language_packs }}"
+    state: present
+
+- name: include timezone tasks
+  tags: [localization, localization_timezone]
+  ansible.builtin.import_tasks: timezone.yml
+
+- name: include locales tasks
+  tags: [localization, localization_locales]
+  ansible.builtin.import_tasks: locales.yml
+
+- name: include keymap tasks
+  tags: [localization, localization_keymap]
+  ansible.builtin.import_tasks: keymap.yml

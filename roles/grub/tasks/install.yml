@@ -1,0 +1,12 @@
+---
+- name: install dependencies
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ __grub_dependencies + grub_extra_dependencies }}"
+
+- name: remove unwanted dependencies
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ grub_remove_dependencies }}"

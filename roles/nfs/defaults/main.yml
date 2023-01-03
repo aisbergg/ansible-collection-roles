@@ -1,0 +1,37 @@
+---
+# ------------------------------------------------------------------------------
+# Installation
+# ------------------------------------------------------------------------------
+
+# role of the machine, available: server, client, all
+nfs_role: server
+
+
+
+# ------------------------------------------------------------------------------
+# Services
+# ------------------------------------------------------------------------------
+
+nfs_service_state: started
+nfs_service_enabled: true
+
+
+
+# ------------------------------------------------------------------------------
+# Configurations
+# ------------------------------------------------------------------------------
+
+#
+nfs_enable_sssd_integration: false
+
+# https://man7.org/linux/man-pages/man5/nfs.conf.5.html
+nfs_config: {}
+
+# https://man7.org/linux/man-pages/man5/nfsmount.conf.5.html
+nfs_mount_config: {}
+
+# https://linux.die.net/man/5/idmapd.conf
+nfs_idmapd_config: {}
+
+# https://man7.org/linux/man-pages/man5/exports.5.html
+nfs_exports: []

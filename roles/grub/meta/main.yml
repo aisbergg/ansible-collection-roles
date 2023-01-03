@@ -1,0 +1,40 @@
+---
+dependencies: []
+
+galaxy_info:
+  author: André Lehmann
+  namespace: aisbergg
+  role_name: grub
+  description: Install and configure the GRUB 2 bootloader on Linux systems.
+  company: none
+  issue_tracker_url: https://github.com/aisbergg/ansible-role-grub/issues
+  license: MIT
+  min_ansible_version: "2.10"
+
+  platforms:
+    - name: EL
+      versions:
+        - "7"
+        - "8"
+    - name: Fedora
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - bullseye
+        - buster
+        - stretch
+    - name: Ubuntu
+      versions:
+        - hirsute
+        - groovy
+        - focal
+        - bionic
+    - name: ArchLinux
+      versions:
+        - all
+
+  galaxy_tags:
+    - bootloader
+    - grub
+    - grub2

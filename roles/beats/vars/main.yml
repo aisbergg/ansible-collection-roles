@@ -1,0 +1,16 @@
+---
+__available_beats:
+  - auditbeat
+  - filebeat
+  - functionbeat
+  - heartbeat
+  - metricbeat
+  - packetbeat
+
+__beats_package_name:
+  auditbeat: auditbeat
+  filebeat: filebeat
+  functionbeat: functionbeat
+  heartbeat: heartbeat-elastic
+  metricbeat: metricbeat
+  packetbeat: packetbeat

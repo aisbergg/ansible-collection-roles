@@ -1,0 +1,20 @@
+---
+- name: reload postfix
+  ansible.builtin.service:
+    name: "{{ __postfix_service_name }}"
+    state: reloaded
+  when:
+    - postfix_service_reload_on_change | bool
+    - postfix_service_state != 'stopped'
+
+- name: restart postfix
+  ansible.builtin.service:
+    name: "{{ __postfix_service_name }}"
+    state: restarted
+  when:
+    - postfix_service_reload_on_change | bool
+    - postfix_service_state != 'stopped'
+
+- name: rebuild alias database
+  ansible.builtin.command:
+    cmd: "postalias /etc/aliases"

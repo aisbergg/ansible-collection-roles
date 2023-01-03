@@ -1,0 +1,44 @@
+---
+- name: assert correctness of configuration
+  ansible.builtin.assert:
+    that:
+      - dest is defined and dest is string
+      - (element.file is defined and element.file is string)
+        or (element.url is defined and element.url is string)
+        or (element.content is defined and element.content is string)
+
+- name: copy file ({{ element.dest }})
+  ansible.builtin.copy:
+    src: "{{ element.file }}"
+    dest: "{{ dest }}"
+    owner: "{{ element.owner | default('root') }}"
+    group: "{{ element.group | default('root') }}"
+    mode: "{{ element.mode | default('0400') }}"
+  notify: "{{ handler | default(omit) }}"
+  when:
+    - element.file is defined
+    - element.file != ''
+
+- name: copy content ({{ element.dest }})
+  ansible.builtin.copy:
+    content: "{{ element.content }}"
+    dest: "{{ dest }}"
+    owner: "{{ element.owner | default('root') }}"
+    group: "{{ element.group | default('root') }}"
+    mode: "{{ element.mode | default('0400') }}"
+  notify: "{{ handler | default(omit) }}"
+  when:
+    - element.content is defined
+    - element.content != ''
+
+- name: get from URL ({{ element.dest }})
+  ansible.builtin.get_url:
+    url: '{{ element.url }}'
+    dest: "{{ dest }}"
+    owner: "{{ element.owner | default('root') }}"
+    group: "{{ element.group | default('root') }}"
+    mode: "{{ element.mode | default('0400') }}"
+  notify: "{{ handler | default(omit) }}"
+  when:
+    - element.url is defined
+    - element.url != ''

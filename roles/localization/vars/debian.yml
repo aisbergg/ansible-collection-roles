@@ -1,0 +1,8 @@
+---
+# variables for Debian distributions
+__localization_requirements:
+  - tzdata
+  - locales
+  - console-data
+
+__localization_locales_conf: /etc/default/locale

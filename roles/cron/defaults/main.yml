@@ -1,0 +1,9 @@
+---
+# service enabled on boot
+cron_service_enabled: true
+
+# service run state (started, stopped, restarted)
+cron_service_state: started
+
+# list of jobs
+cron_jobs: []

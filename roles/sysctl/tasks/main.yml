@@ -1,0 +1,77 @@
+---
+- name: include OS-specific variables
+  tags: [sysctl, always]
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      skip: true
+
+- name: ensure dependencies are installed
+  tags: [sysctl]
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ __sysctl_dependencies }}"
+
+- name: create configuration /etc/sysctl.conf
+  tags: [sysctl]
+  ansible.builtin.template:
+    src: sysctl.conf.j2
+    dest: /etc/sysctl.conf
+    owner: root
+    group: root
+    mode: 0644
+  vars:
+    parameters: "{{ sysctl_conf }}"
+  notify: reload sysctl
+
+- name: ensure /etc/sysctl.d dir exists
+  tags: [sysctl]
+  ansible.builtin.file:
+    path: /etc/sysctl.d
+    state: directory
+    mode: 0755
+
+- name: link /etc/sysctl.conf to /etc/sysctl.d/99-sysctl.conf
+  tags: [sysctl]
+  ansible.builtin.file:
+    src: /etc/sysctl.conf
+    path: /etc/sysctl.d/99-sysctl.conf
+    state: link
+    force: true
+  notify: reload sysctl
+
+- name: find configurations in /etc/sysctl.d
+  tags: [sysctl]
+  ansible.builtin.find:
+    paths: /etc/sysctl.d
+    patterns: "*.conf"
+    file_type: file
+  register: files_in_sysctld
+  when: sysctl_d_clear
+
+- name: clear configurations in /etc/sysctl.d
+  tags: [sysctl]
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  notify: reload sysctl
+  loop: "{{ files_in_sysctld.files | default([]) | excess_configs(sysctl_d, sysctl_d_clear_whitelist) }}"
+
+- name: create configurations in /etc/sysctl.d
+  tags: [sysctl]
+  ansible.builtin.template:
+    src: sysctl.conf.j2
+    dest: "{{ config_path }}"
+    owner: root
+    group: root
+    mode: 0644
+  notify: reload sysctl
+  vars:
+    config_path: "{{ item | config_path }}"
+    parameters: "{{ item.parameters | default({}) }}"
+  loop: "{{ sysctl_d }}"
+  loop_control:
+    label: "{{ config_path }}"

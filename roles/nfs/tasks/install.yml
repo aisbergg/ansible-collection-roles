@@ -1,0 +1,24 @@
+---
+# ------------------------------------------------------------------------------
+# Server
+# ------------------------------------------------------------------------------
+
+- when: nfs_role in ['server', 'all']
+  block:
+    - name: install nfs server packages
+      ansible.builtin.package:
+        name: "{{ __nfs_server_requirements }}"
+        state: present
+
+
+
+# ------------------------------------------------------------------------------
+# Client
+# ------------------------------------------------------------------------------
+
+- when: nfs_role in ['client', 'all']
+  block:
+    - name: install nfs client packages
+      ansible.builtin.package:
+        name: "{{ __nfs_client_requirements }}"
+        state: present
